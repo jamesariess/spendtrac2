@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports | SpendTrackFinance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5; --primary-dark: #4338ca; --bg-light: #F8FAFC; --bg-white: #ffffff;
+            --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; --radius: 12px;
+            --transition: all 0.3s ease; --success: #22c55e; --danger: #ef4444; --sidebar-width: 260px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; color: var(--text-main); background: var(--bg-light); min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
+        button { font-family: inherit; cursor: pointer; border: none; }
+        
+        .dashboard-layout { display: flex; min-height: 100vh; }
+        
+        .sidebar { width: var(--sidebar-width); background: var(--bg-white); border-right: 1px solid var(--border); position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border); }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; }
+        .sidebar-logo svg { color: var(--primary); }
+        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); padding: 0 12px; margin-bottom: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius); font-size: 0.9rem; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; transition: var(--transition); cursor: pointer; }
+        .nav-item:hover { background: var(--bg-light); color: var(--text-main); }
+        .nav-item.active { background: #e0e7ff; color: var(--primary); }
+        .nav-item svg { width: 20px; height: 20px; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+        .user-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius); background: var(--bg-light); cursor: pointer; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.9rem; font-weight: 600; }
+        .user-email { font-size: 0.75rem; color: var(--text-muted); }
+        
+        .main-content { flex: 1; margin-left: var(--sidebar-width); min-height: 100vh; }
+        .top-header { background: var(--bg-white); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .header-left { display: flex; align-items: center; gap: 24px; }
+        .page-title { font-size: 1.25rem; font-weight: 600; }
+        .header-btn { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-light); color: var(--text-muted); }
+        .header-btn:hover { background: #e0e7ff; color: var(--primary); }
+        .header-btn svg { width: 20px; height: 20px; }
+        
+        .reports-content { padding: 32px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .page-header h1 { font-size: 1.5rem; font-weight: 700; }
+        
+        .month-selector { display: flex; align-items: center; gap: 16px; }
+        .month-selector button { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-white); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+        .month-selector button:hover { background: var(--bg-light); }
+        .month-selector span { font-weight: 600; min-width: 140px; text-align: center; }
+        
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
+        .summary-card { background: var(--bg-white); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); }
+        .summary-card h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+        .summary-card .value { font-size: 1.5rem; font-weight: 700; }
+        .summary-card.income .value { color: var(--success); }
+        .summary-card.expense .value { color: var(--danger); }
+        .summary-card .change { font-size: 0.8rem; margin-top: 4px; }
+        .summary-card .change.positive { color: var(--success); }
+        .summary-card .change.negative { color: var(--danger); }
+        
+        .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px; }
+        .chart-card { background: var(--bg-white); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); }
+        .chart-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; }
+        .chart-container { height: 300px; position: relative; }
+        .chart-container-small { height: 250px; position: relative; }
+        
+        .insights-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .insight-card { background: var(--bg-white); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); }
+        .insight-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .insight-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .insight-icon.warning { background: #fef3c7; color: #d97706; }
+        .insight-icon.success { background: #dcfce7; color: #16a34a; }
+        .insight-icon.info { background: #dbeafe; color: #2563eb; }
+        .insight-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .insight-item:last-child { border-bottom: none; }
+        .insight-item .title { font-weight: 500; margin-bottom: 4px; }
+        .insight-item .desc { font-size: 0.85rem; color: var(--text-muted); }
+        
+        .btn { display: inline-flex; align-items: center; padding: 10px 20px; border-radius: var(--radius); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: var(--transition); border: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn svg { width: 16px; height: 16px; margin-right: 6px; }
+        
+        .export-section { display: flex; gap: 12px; margin-bottom: 24px; }
+        
+        @media (max-width: 1200px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } .charts-row { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .main-content { margin-left: 0; } .reports-content { padding: 16px; } .summary-grid { grid-template-columns: 1fr; } .insights-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    SpendTrack
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="dashboard.html" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        Dashboard
+                    </a>
+                    <a href="transactions.html" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Transactions
+                    </a>
+                    <a href="budget.html" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                        Budget
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <a href="reports.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                        Reports
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="#" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Profile
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card" onclick="logout()">
+                    <div class="user-avatar">DS</div>
+                    <div class="user-info"><div class="user-name">Demo User</div><div class="user-email">demo@spendtrack.com</div></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="header-btn" onclick="toggleSidebar()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <h1 class="page-title">Reports</h1>
+                </div>
+            </header>
+
+            <div class="reports-content">
+                <div class="page-header">
+                    <h1>Financial Reports</h1>
+                    <div class="month-selector">
+                        <button onclick="changeMonth(-1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <span id="currentMonth">December 2024</span>
+                        <button onclick="changeMonth(1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="export-section">
+                    <button class="btn btn-primary" onclick="exportReport()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export Report
+                    </button>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card income">
+                        <h3>Total Income</h3>
+                        <div class="value" id="totalIncome">$0.00</div>
+                        <div class="change positive" id="incomeChange">+0% from last month</div>
+                    </div>
+                    <div class="summary-card expense">
+                        <h3>Total Expenses</h3>
+                        <div class="value" id="totalExpenses">$0.00</div>
+                        <div class="change negative" id="expenseChange">-0% from last month</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Net Savings</h3>
+                        <div class="value" id="netSavings">$0.00</div>
+                        <div class="change" id="savingsChange">+0% from last month</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Transactions</h3>
+                        <div class="value" id="totalTransactions">0</div>
+                        <div class="change" id="txnChange">+0% from last month</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>Monthly Trends</h3>
+                        <div class="chart-container">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Expense Breakdown</h3>
+                        <div class="chart-container-small">
+                            <canvas id="breakdownChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>Category Comparison</h3>
+                        <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="insights-grid" style="grid-template-columns: 1fr;">
+                        <div class="insight-card">
+                            <h3><div class="insight-icon warning"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div> Insights</h3>
+                            <div id="insightsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        if (localStorage.getItem('isLoggedIn') !== 'true') window.location.href = 'login.html';
+        
+        let currentDate = new Date();
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let trendChart, breakdownChart, categoryChart;
+        
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        
+        function changeMonth(delta) { currentDate.setMonth(currentDate.getMonth() + delta); renderReport(); }
+        
+        function formatCurrency(amount) { return '$' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'); }
+        
+        function getMonthKey(date) { return date.toISOString().slice(0, 7); }
+        
+        function getMonthTransactions(monthKey) { return transactions.filter(t => t.date.startsWith(monthKey)); }
+        
+        function getPreviousMonthKey() { let d = new Date(currentDate); d.setMonth(d.getMonth() - 1); return getMonthKey(d); }
+        
+        function calculateStats(monthKey) {
+            const txns = getMonthTransactions(monthKey);
+            const income = txns.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expenses = txns.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            return { income, expenses, savings: income - expenses, count: txns.length };
+        }
+        
+        function getPercentChange(current, previous) {
+            if (previous === 0) return current > 0 ? 100 : 0;
+            return ((current - previous) / previous) * 100;
+        }
+        
+        function renderReport() {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('currentMonth').textContent = monthNames[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
+            
+            const monthKey = getMonthKey(currentDate);
+            const prevMonthKey = getPreviousMonthKey();
+            
+            const currentStats = calculateStats(monthKey);
+            const prevStats = calculateStats(prevMonthKey);
+            
+            document.getElementById('totalIncome').textContent = formatCurrency(currentStats.income);
+            document.getElementById('totalExpenses').textContent = formatCurrency(currentStats.expenses);
+            document.getElementById('netSavings').textContent = formatCurrency(currentStats.savings);
+            document.getElementById('totalTransactions').textContent = currentStats.count;
+            
+            const incomeChange = getPercentChange(currentStats.income, prevStats.income);
+            const expenseChange = getPercentChange(currentStats.expenses, prevStats.expenses);
+            const savingsChange = getPercentChange(currentStats.savings, prevStats.savings);
+            const txnChange = getPercentChange(currentStats.count, prevStats.count);
+            
+            document.getElementById('incomeChange').textContent = (incomeChange >= 0 ? '+' : '') + incomeChange.toFixed(1) + '% from last month';
+            document.getElementById('expenseChange').textContent = (expenseChange >= 0 ? '+' : '') + expenseChange.toFixed(1) + '% from last month';
+            document.getElementById('savingsChange').textContent = (savingsChange >= 0 ? '+' : '') + savingsChange.toFixed(1) + '% from last month';
+            document.getElementById('txnChange').textContent = (txnChange >= 0 ? '+' : '') + txnChange.toFixed(1) + '% from last month';
+            
+            updateCharts(monthKey);
+            generateInsights(currentStats, monthKey);
+        }
+        
+        function updateCharts(monthKey) {
+            const months = []; const incomeData = []; const expenseData = [];
+            for (let i = 5; i >= 0; i--) {
+                let d = new Date(currentDate); d.setMonth(d.getMonth() - i);
+                let mk = getMonthKey(d);
+                let stats = calculateStats(mk);
+                months.push(d.toLocaleDateString('en-US', { month: 'short' }));
+                incomeData.push(stats.income); expenseData.push(stats.expenses);
+            }
+            
+            if (trendChart) trendChart.destroy();
+            trendChart = new Chart(document.getElementById('trendChart'), {
+                type: 'line', data: {
+                    labels: months, datasets: [
+                        { label: 'Income', data: incomeData, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.4 },
+                        { label: 'Expenses', data: expenseData, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4 }
+                    ]
+                }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: v => '$' + v } } } }
+            });
+            
+            const categoryData = {};
+            getMonthTransactions(monthKey).filter(t => t.type === 'expense').forEach(t => { categoryData[t.category] = (categoryData[t.category] || 0) + t.amount; });
+            
+            if (breakdownChart) breakdownChart.destroy();
+            breakdownChart = new Chart(document.getElementById('breakdownChart'), {
+                type: 'doughnut', data: {
+                    labels: Object.keys(categoryData).map(c => c.charAt(0).toUpperCase() + c.slice(1)),
+                    datasets: [{ data: Object.values(categoryData).length ? Object.values(categoryData) : [1], backgroundColor: ['#f59e0b','#3b82f6','#ec4899','#ef4444','#8b5cf6'], borderWidth: 0 }]
+                }, options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom' } } }
+            });
+            
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(document.getElementById('categoryChart'), {
+                type: 'bar', data: {
+                    labels: Object.keys(categoryData).map(c => c.charAt(0).toUpperCase() + c.slice(1)),
+                    datasets: [{ label: 'Amount', data: Object.values(categoryData).length ? Object.values(categoryData) : [0], backgroundColor: '#4f46e5', borderRadius: 6 }]
+                }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => '$' + v } } } }
+            });
+        }
+        
+        function generateInsights(stats, monthKey) {
+            const budgets = JSON.parse(localStorage.getItem('budgets')) || {};
+            const monthBudgets = budgets[monthKey] || {};
+            const txns = getMonthTransactions(monthKey);
+            
+            let insights = [];
+            
+            if (stats.savings > 0) {
+                insights.push({ icon: 'success', title: 'Great savings!', desc: `You saved ${formatCurrency(stats.savings)} this month. Keep it up!` });
+            }
+            
+            const topCategory = Object.entries(
+                txns.filter(t => t.type === 'expense').reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + t.amount; return acc; }, {})
+            ).sort((a, b) => b[1] - a[1])[0];
+            
+            if (topCategory) {
+                insights.push({ icon: 'info', title: 'Top expense', desc: `Your highest spending was ${formatCurrency(topCategory[1])} on ${topCategory[0]}` });
+            }
+            
+            Object.entries(monthBudgets).forEach(([cat, budget]) => {
+                const spent = txns.filter(t => t.type === 'expense' && t.category === cat).reduce((sum, t) => sum + t.amount, 0);
+                if (spent > budget) {
+                    insights.push({ icon: 'warning', title: 'Over budget', desc: `You exceeded your ${cat} budget by ${formatCurrency(spent - budget)}` });
+                }
+            });
+            
+            if (stats.expenses > stats.income) {
+                insights.push({ icon: 'warning', title: 'Expense warning', desc: 'Your expenses exceed your income this month. Consider reducing spending.' });
+            }
+            
+            if (insights.length === 0) {
+                insights.push({ icon: 'info', title: 'No insights yet', desc: 'Add more transactions to get personalized insights.' });
+            }
+            
+            document.getElementById('insightsList').innerHTML = insights.map(i => `
+                <div class="insight-item">
+                    <div class="title">${i.title}</div>
+                    <div class="desc">${i.desc}</div>
+                </div>
+            `).join('');
+        }
+        
+        function exportReport() {
+            const monthKey = getMonthKey(currentDate);
+            const stats = calculateStats(monthKey);
+            const report = `Financial Report - ${document.getElementById('currentMonth').textContent}\n\n` +
+                `Total Income: ${formatCurrency(stats.income)}\n` +
+                `Total Expenses: ${formatCurrency(stats.expenses)}\n` +
+                `Net Savings: ${formatCurrency(stats.savings)}\n` +
+                `Total Transactions: ${stats.count}\n\n` +
+                `Generated by SpendTrackFinance`;
+            
+            const blob = new Blob([report], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `financial-report-${monthKey}.txt`;
+            a.click();
+        }
+        
+        function logout() { if (confirm('Logout?')) { localStorage.removeItem('isLoggedIn'); window.location.href = 'login.html'; } }
+        
+        renderReport();
+    </script>
+</body>
+</html>
+

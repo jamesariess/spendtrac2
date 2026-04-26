@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions | SpendTrackFinance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338ca;
+            --bg-light: #F8FAFC;
+            --bg-white: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --transition: all 0.3s ease;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --sidebar-width: 260px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; color: var(--text-main); background: var(--bg-light); min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
+        button { font-family: inherit; cursor: pointer; border: none; }
+        
+        .dashboard-layout { display: flex; min-height: 100vh; }
+        
+        .sidebar {
+            width: var(--sidebar-width); background: var(--bg-white); border-right: 1px solid var(--border);
+            position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 100;
+        }
+        .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border); }
+        .sidebar-logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; }
+        .sidebar-logo svg { color: var(--primary); }
+        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); padding: 0 12px; margin-bottom: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius); font-size: 0.9rem; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; transition: var(--transition); cursor: pointer; }
+        .nav-item:hover { background: var(--bg-light); color: var(--text-main); }
+        .nav-item.active { background: #e0e7ff; color: var(--primary); }
+        .nav-item svg { width: 20px; height: 20px; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+        .user-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius); background: var(--bg-light); cursor: pointer; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.9rem; font-weight: 600; }
+        .user-email { font-size: 0.75rem; color: var(--text-muted); }
+        
+        .main-content { flex: 1; margin-left: var(--sidebar-width); min-height: 100vh; }
+        
+        .top-header { background: var(--bg-white); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .header-left { display: flex; align-items: center; gap: 24px; }
+        .page-title { font-size: 1.25rem; font-weight: 600; }
+        .header-btn { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-light); color: var(--text-muted); }
+        .header-btn:hover { background: #e0e7ff; color: var(--primary); }
+        .header-btn svg { width: 20px; height: 20px; }
+        
+        .transactions-content { padding: 32px; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-header h1 { font-size: 1.5rem; font-weight: 700; }
+        
+        .filters { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+        .filter-group { display: flex; align-items: center; gap: 8px; }
+        .filter-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .form-select, .form-input { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.9rem; background: var(--bg-white); }
+        .form-select:focus, .form-input:focus { outline: none; border-color: var(--primary); }
+        .form-select { min-width: 150px; }
+        
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; border-radius: var(--radius); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: var(--transition); border: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn svg { width: 16px; height: 16px; margin-right: 6px; }
+        
+        .transactions-card { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+        .transactions-table { width: 100%; border-collapse: collapse; }
+        .transactions-table th, .transactions-table td { padding: 16px; text-align: left; }
+        .transactions-table th { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: #f8fafc; }
+        .transactions-table td { font-size: 0.9rem; border-bottom: 1px solid var(--border); }
+        .transactions-table tr:last-child td { border-bottom: none; }
+        .transactions-table tr:hover td { background: var(--bg-light); }
+        
+        .transaction-info { display: flex; align-items: center; gap: 12px; }
+        .transaction-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .transaction-icon.food { background: #fef3c7; color: #d97706; }
+        .transaction-icon.transport { background: #dbeafe; color: #2563eb; }
+        .transaction-icon.shopping { background: #fce7f3; color: #db2777; }
+        .transaction-icon.bills { background: #fee2e2; color: #dc2626; }
+        .transaction-icon.entertainment { background: #e0e7ff; color: #4f46e5; }
+        .transaction-icon.income { background: #dcfce7; color: #16a34a; }
+        .transaction-details h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+        .transaction-details span { font-size: 0.75rem; color: var(--text-muted); }
+        
+        .transaction-amount { font-weight: 600; }
+        .transaction-amount.income { color: var(--success); }
+        .transaction-amount.expense { color: var(--text-main); }
+        
+        .transaction-actions { display: flex; gap: 8px; }
+        .action-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--bg-light); color: var(--text-muted); }
+        .action-btn:hover { background: #e0e7ff; color: var(--primary); }
+        .action-btn.delete:hover { background: #fee2e2; color: var(--danger); }
+        .action-btn svg { width: 16px; height: 16px; }
+        
+        .empty-state { text-align: center; padding: 60px; color: var(--text-muted); }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5; }
+        
+        .quick-add-btn { position: fixed; bottom: 32px; right: 32px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); cursor: pointer; z-index: 50; }
+        .quick-add-btn:hover { background: var(--primary-dark); transform: scale(1.1); }
+        .quick-add-btn svg { width: 24px; height: 24px; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: var(--transition); }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal { background: var(--bg-white); border-radius: var(--radius); width: 100%; max-width: 500px; transform: scale(0.9); transition: var(--transition); }
+        .modal-overlay.show .modal { transform: scale(1); }
+        .modal-header { padding: 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .modal-title { font-size: 1.125rem; font-weight: 600; }
+        .modal-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--bg-light); color: var(--text-muted); }
+        .modal-close:hover { background: #fee2e2; color: var(--danger); }
+        .modal-body { padding: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 8px; }
+        .form-input, .form-select { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.9rem; }
+        .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end; }
+        .btn-secondary { background: var(--bg-light); color: var(--text-main); }
+        .btn-secondary:hover { background: var(--border); }
+        
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text-main); color: white; padding: 12px 24px; border-radius: var(--radius); font-weight: 500; z-index: 2000; opacity: 0; transition: all 0.3s ease; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+            .transactions-content { padding: 16px; }
+            .filters { flex-direction: column; }
+            .transactions-table { display: block; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    SpendTrack
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="dashboard.html" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        Dashboard
+                    </a>
+                    <a href="transactions.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Transactions
+                    </a>
+                    <a href="budget.html" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                        Budget
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <a href="reports.html" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                        Reports
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="#" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Profile
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card" onclick="logout()">
+                    <div class="user-avatar">DS</div>
+                    <div class="user-info"><div class="user-name">Demo User</div><div class="user-email">demo@spendtrack.com</div></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="header-btn" onclick="toggleSidebar()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <h1 class="page-title">Transactions</h1>
+                </div>
+            </header>
+
+            <div class="transactions-content">
+                <div class="page-header">
+                    <h1>All Transactions</h1>
+                    <button class="btn btn-primary" onclick="openModal()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add Transaction
+                    </button>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label class="filter-label">Type:</label>
+                        <select class="form-select" id="filterType" onchange="filterTransactions()">
+                            <option value="">All</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Category:</label>
+                        <select class="form-select" id="filterCategory" onchange="filterTransactions()">
+                            <option value="">All Categories</option>
+                            <option value="food">Food & Dining</option>
+                            <option value="transport">Transport</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="bills">Bills & Utilities</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="income">Income</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">From:</label>
+                        <input type="date" class="form-input" id="filterDateFrom" onchange="filterTransactions()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">To:</label>
+                        <input type="date" class="form-input" id="filterDateTo" onchange="filterTransactions()">
+                    </div>
+                </div>
+
+                <div class="transactions-card">
+                    <table class="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Transaction</th>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsBody">
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        <p>No transactions found</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <button class="quick-add-btn" onclick="openModal()" title="Add Transaction">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+
+    <div class="modal-overlay" id="transactionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add Transaction</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="transactionForm">
+                    <input type="hidden" id="transactionId">
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" id="transactionType" required>
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-input" id="transactionDesc" placeholder="e.g., Grocery shopping" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Amount</label>
+                            <input type="number" class="form-input" id="transactionAmount" placeholder="0.00" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="transactionCategory" required>
+                                <option value="food">Food & Dining</option>
+                                <option value="transport">Transport</option>
+                                <option value="shopping">Shopping</option>
+                                <option value="bills">Bills & Utilities</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="income">Income</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="transactionDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Allocate to Goal (Optional)</label>
+                        <select class="form-select" id="transactionGoal">
+                            <option value="">-- No Goal --</option>
+                        </select>
+                        <small style="color: var(--text-muted); font-size: 0.8rem;">Select a goal to allocate this income towards</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTransaction()">Save Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        if (localStorage.getItem('isLoggedIn') !== 'true') window.location.href = 'login.html';
+        
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        
+        const categoryIcons = {
+            food: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>',
+            transport: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>',
+            shopping: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>',
+            bills: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+            entertainment: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/></svg>',
+            income: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>'
+        };
+        const categoryLabels = { food: 'Food & Dining', transport: 'Transport', shopping: 'Shopping', bills: 'Bills & Utilities', entertainment: 'Entertainment', income: 'Income' };
+        
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        
+        // Load goals into dropdown
+        function loadGoals() {
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const goalSelect = document.getElementById('transactionGoal');
+            goalSelect.innerHTML = '<option value="">-- No Goal --</option>';
+            goals.forEach(goal => {
+                if (goal.current < goal.target) {
+                    const remaining = goal.target - goal.current;
+                    goalSelect.innerHTML += `<option value="${goal.id}">${goal.name} (${formatCurrency(remaining)} remaining)</option>`;
+                }
+            });
+        }
+        
+        function formatCurrency(amount) { return '$' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'); }
+        function formatDate(dateStr) { return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+        
+        function renderTransactions() {
+            const typeFilter = document.getElementById('filterType').value;
+            const catFilter = document.getElementById('filterCategory').value;
+            const fromDate = document.getElementById('filterDateFrom').value;
+            const toDate = document.getElementById('filterDateTo').value;
+            
+            let filtered = transactions;
+            if (typeFilter) filtered = filtered.filter(t => t.type === typeFilter);
+            if (catFilter) filtered = filtered.filter(t => t.category === catFilter);
+            if (fromDate) filtered = filtered.filter(t => t.date >= fromDate);
+            if (toDate) filtered = filtered.filter(t => t.date <= toDate);
+            
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const tbody = document.getElementById('transactionsBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = ''; emptyState.style.display = 'block';
+                return;
+            }
+            emptyState.style.display = 'none';
+            tbody.innerHTML = filtered.map(t => `
+                <tr>
+                    <td><div class="transaction-info"><div class="transaction-icon ${t.category}">${categoryIcons[t.category]}</div><div class="transaction-details"><h4>${t.description}</h4><span>${t.type}</span></div></div></td>
+                    <td>${formatDate(t.date)}</td>
+                    <td>${categoryLabels[t.category]}</td>
+                    <td class="transaction-amount ${t.type}">${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}</td>
+                    <td><div class="transaction-actions"><button class="action-btn" onclick="editTransaction('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn delete" onclick="deleteTransaction('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></td>
+                </tr>
+            `).join('');
+        }
+        
+        function filterTransactions() { renderTransactions(); }
+        
+        function openModal(isEdit = false) {
+            document.getElementById('transactionModal').classList.add('show');
+            loadGoals();
+            if (!isEdit) { document.getElementById('modalTitle').textContent = 'Add Transaction'; document.getElementById('transactionForm').reset(); document.getElementById('transactionDate').valueAsDate = new Date(); document.getElementById('transactionId').value = ''; }
+        }
+        function closeModal() { document.getElementById('transactionModal').classList.remove('show'); document.getElementById('transactionForm').reset(); document.getElementById('transactionId').value = ''; }
+        
+        function saveTransaction() {
+            const id = document.getElementById('transactionId').value;
+            const type = document.getElementById('transactionType').value;
+            const description = document.getElementById('transactionDesc').value;
+            const amount = document.getElementById('transactionAmount').value;
+            const category = document.getElementById('transactionCategory').value;
+            const date = document.getElementById('transactionDate').value;
+            const goalId = document.getElementById('transactionGoal').value;
+            
+            if (!description || !amount) { showToast('Please fill all fields', 'error'); return; }
+            
+            // Handle goal allocation for income transactions
+            if (goalId && type === 'income') {
+                let goals = JSON.parse(localStorage.getItem('goals')) || [];
+                const goalIndex = goals.findIndex(g => g.id === goalId);
+                if (goalIndex !== -1) {
+                    const goal = goals[goalIndex];
+                    const amountValue = parseFloat(amount);
+                    const remaining = goal.target - goal.current;
+                    const addAmount = Math.min(amountValue, remaining);
+                    goals[goalIndex].current = (goals[goalIndex].current || 0) + addAmount;
+                    localStorage.setItem('goals', JSON.stringify(goals));
+                    if (addAmount < amountValue) {
+                        showToast(`Only ${formatCurrency(addAmount)} added to goal (target reached)`, 'success');
+                    } else {
+                        showToast(`Added ${formatCurrency(addAmount)} to "${goal.name}" goal!`, 'success');
+                    }
+                }
+            }
+            
+            if (id) {
+                const idx = transactions.findIndex(t => t.id === id);
+                if (idx !== -1) { transactions[idx] = { id, type, description, amount: parseFloat(amount), category, date, goalId: goalId || null }; showToast('Transaction updated!', 'success'); }
+            } else {
+                transactions.push({ id: Date.now().toString(), type, description, amount: parseFloat(amount), category, date, goalId: goalId || null });
+                showToast('Transaction added!', 'success');
+            }
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            renderTransactions(); closeModal();
+        }
+        
+        function editTransaction(id) {
+            const t = transactions.find(x => x.id === id); if (!t) return;
+            document.getElementById('modalTitle').textContent = 'Edit Transaction';
+            document.getElementById('transactionId').value = t.id;
+            document.getElementById('transactionType').value = t.type;
+            document.getElementById('transactionDesc').value = t.description;
+            document.getElementById('transactionAmount').value = t.amount;
+            document.getElementById('transactionCategory').value = t.category;
+            document.getElementById('transactionDate').value = t.date;
+            openModal(true);
+        }
+        
+        function deleteTransaction(id) {
+            if (!confirm('Delete this transaction?')) return;
+            transactions = transactions.filter(t => t.id !== id);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            renderTransactions(); showToast('Transaction deleted!', 'success');
+        }
+        
+        function showToast(msg, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg; toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        function logout() { if (confirm('Logout?')) { localStorage.removeItem('isLoggedIn'); window.location.href = 'login.html'; } }
+        
+        document.getElementById('transactionModal').addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+        
+        renderTransactions();
+    </script>
+</body>
+</html>
+

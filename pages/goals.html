@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goals | SpendTrackFinance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338ca;
+            --secondary: #3B82F6;
+            --accent: #8B5CF6;
+            --bg-light: #F8FAFC;
+            --bg-white: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            background-color: var(--bg-light);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        a { text-decoration: none; color: inherit; transition: var(--transition); }
+        ul { list-style: none; }
+        button { font-family: inherit; cursor: pointer; border: none; }
+
+        /* --- LAYOUT --- */
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-white);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .sidebar-logo svg {
+            color: var(--primary);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-light);
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background: #e0e7ff;
+            color: var(--primary);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--radius);
+            background: var(--bg-light);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .user-card:hover {
+            background: #e0e7ff;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-email {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        /* --- TOP HEADER --- */
+        .top-header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-light);
+            color: var(--text-muted);
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .header-btn:hover {
+            background: #e0e7ff;
+            color: var(--primary);
+        }
+
+        .header-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            border: 2px solid var(--bg-white);
+        }
+
+        /* --- GOALS CONTENT --- */
+        .goals-content {
+            padding: 32px;
+        }
+
+        .goals-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .goals-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .goals-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .goal-stat-card {
+            background: var(--bg-white);
+            border-radius: var(--radius);
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .goal-stat-card h3 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .goal-stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .goal-stat-card .value.success {
+            color: var(--success);
+        }
+
+        .goal-stat-card .value.warning {
+            color: var(--warning);
+        }
+
+        .goal-stat-card .value.primary {
+            color: var(--primary);
+        }
+
+        /* --- GOAL CARDS --- */
+        .goals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .goal-card {
+            background: var(--bg-white);
+            border-radius: var(--radius);
+            padding: 24px;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .goal-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .goal-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .goal-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e0e7ff;
+            color: var(--primary);
+        }
+
+        .goal-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .goal-menu {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-light);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .goal-menu:hover {
+            background: var(--border);
+        }
+
+        .goal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .goal-target {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .goal-progress-container {
+            margin-bottom: 12px;
+        }
+
+        .goal-progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .goal-progress-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .goal-progress-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .goal-progress-bar {
+            height: 8px;
+            background: var(--bg-light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .goal-progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .goal-progress-fill.primary {
+            background: var(--primary);
+        }
+
+        .goal-progress-fill.success {
+            background: var(--success);
+        }
+
+        .goal-progress-fill.warning {
+            background: var(--warning);
+        }
+
+        .goal-dates {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .goal-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+
+        .goal-status.completed {
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .goal-status.in-progress {
+            background: #e0e7ff;
+            color: var(--primary);
+        }
+
+        .goal-status.not-started {
+            background: #f1f5f9;
+            color: var(--text-muted);
+        }
+
+        /* --- EMPTY STATE --- */
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            background: var(--bg-white);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        /* --- BUTTONS --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-white);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: var(--transition);
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-light);
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* --- TOAST --- */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text-main);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            font-weight: 500;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .goals-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .goals-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .goals-content {
+                padding: 16px;
+            }
+
+            .goals-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="dashboard.html" class="sidebar-logo">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    SpendTrack
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="dashboard.html" class="nav-item" data-page="dashboard">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"/>
+                            <rect x="14" y="3" width="7" height="7"/>
+                            <rect x="14" y="14" width="7" height="7"/>
+                            <rect x="3" y="14" width="7" height="7"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <a href="transactions.html" class="nav-item" data-page="transactions">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                        Transactions
+                    </a>
+                    <a href="budget.html" class="nav-item" data-page="budget">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="20" x2="12" y2="10"/>
+                            <line x1="18" y1="20" x2="18" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="16"/>
+                        </svg>
+                        Budget
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <a href="reports.html" class="nav-item" data-page="reports">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+                            <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                        </svg>
+                        Reports
+                    </a>
+                    <a href="goals.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        Goals
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="profile.html" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Profile
+                    </a>
+                    <a href="settings.html" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        Settings
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-card" onclick="logout()">
+                    <div class="user-avatar">DS</div>
+                    <div class="user-info">
+                        <div class="user-name">Demo User</div>
+                        <div class="user-email">demo@spendtrack.com</div>
+                    </div>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="header-btn" id="menuToggle" onclick="toggleSidebar()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <h1 class="page-title">Goals</h1>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" onclick="showNotifications()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span class="notification-badge"></span>
+                    </button>
+                    <button class="header-btn" onclick="window.location.href='settings.html'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Goals Content -->
+            <div class="goals-content">
+                <div class="goals-header">
+                    <h1>Financial Goals</h1>
+                    <button class="btn btn-primary" onclick="openGoalModal()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Add Goal
+                    </button>
+                </div>
+
+                <!-- Goals Stats -->
+                <div class="goals-stats">
+                    <div class="goal-stat-card">
+                        <h3>Active Goals</h3>
+                        <div class="value primary" id="activeGoals">0</div>
+                    </div>
+                    <div class="goal-stat-card">
+                        <h3>Completed</h3>
+                        <div class="value success" id="completedGoals">0</div>
+                    </div>
+                    <div class="goal-stat-card">
+                        <h3>Total Saved</h3>
+                        <div class="value" id="totalSaved">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- Goals Grid -->
+                <div class="goals-grid" id="goalsGrid">
+                    <!-- Goals will be rendered here -->
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    <h3>No Goals Yet</h3>
+                    <p>Start saving for your financial goals by creating your first goal!</p>
+                    <button class="btn btn-primary" onclick="openGoalModal()">Create Your First Goal</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Goal Modal -->
+    <div class="modal-overlay" id="goalModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="goalModalTitle">Add New Goal</h3>
+                <button class="modal-close" onclick="closeGoalModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="goalForm">
+                    <input type="hidden" id="goalId">
+                    <div class="form-group">
+                        <label class="form-label">Goal Name</label>
+                        <input type="text" class="form-input" id="goalName" placeholder="e.g., Emergency Fund" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Amount</label>
+                        <input type="number" class="form-input" id="goalTarget" placeholder="0.00" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Current Amount</label>
+                        <input type="number" class="form-input" id="goalCurrent" placeholder="0.00" step="0.01" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Date</label>
+                        <input type="date" class="form-input" id="goalDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Goal Type</label>
+                        <select class="form-select" id="goalType">
+                            <option value="savings">Savings</option>
+                            <option value="emergency">Emergency Fund</option>
+                            <option value="vacation">Vacation</option>
+                            <option value="car">Car</option>
+                            <option value="home">Home</option>
+                            <option value="investment">Investment</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeGoalModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveGoal()">Save Goal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Contribute Modal -->
+    <div class="modal-overlay" id="contributeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="contributeModalTitle">Add Contribution</h3>
+                <button class="modal-close" onclick="closeContributeModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="contributeGoalId">
+                <div class="form-group">
+                    <label class="form-label">Amount to Add</label>
+                    <input type="number" class="form-input" id="contributeAmount" placeholder="0.00" step="0.01" min="0">
+                </div>
+                <p id="contributeInfo" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeContributeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitContribution()">Add to Goal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is logged in
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+
+        // Initialize goals
+        let goals = JSON.parse(localStorage.getItem('goals')) || [];
+
+        // Goal type icons
+        const goalIcons = {
+            savings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+            emergency: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+            vacation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+            car: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+            home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+            investment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>',
+            other: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+        };
+
+        // Mobile menu toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('show');
+        }
+
+        // Show notifications
+        function showNotifications() {
+            showToast('You have no new notifications', 'success');
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return '$' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        // Calculate goal progress
+        function calculateProgress(current, target) {
+            return Math.min(Math.round((current / target) * 100), 100);
+        }
+
+        // Update stats
+        function updateGoalStats() {
+            const activeGoals = goals.filter(g => g.current < g.target).length;
+            const completedGoals = goals.filter(g => g.current >= g.target).length;
+            const totalSaved = goals.reduce((sum, g) => sum + parseFloat(g.current), 0);
+
+            document.getElementById('activeGoals').textContent = activeGoals;
+            document.getElementById('completedGoals').textContent = completedGoals;
+            document.getElementById('totalSaved').textContent = formatCurrency(totalSaved);
+        }
+
+        // Render goals
+        function renderGoals() {
+            const goalsGrid = document.getElementById('goalsGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (goals.length === 0) {
+                goalsGrid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            goalsGrid.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            goalsGrid.innerHTML = goals.map(goal => {
+                const progress = calculateProgress(goal.current, goal.target);
+                const isCompleted = progress >= 100;
+                const status = isCompleted ? 'completed' : (goal.current > 0 ? 'in-progress' : 'not-started');
+                const statusText = isCompleted ? 'Completed' : (goal.current > 0 ? 'In Progress' : 'Not Started');
+                const progressColor = isCompleted ? 'success' : (progress >= 50 ? 'primary' : 'warning');
+
+                return `
+                    <div class="goal-card">
+                        <div class="goal-card-header">
+                            <div class="goal-icon">
+                                ${goalIcons[goal.type] || goalIcons.other}
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="goal-menu" onclick="openContributeModal('${goal.id}', '${goal.name}')" title="Add contribution">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                </button>
+                                <button class="goal-menu" onclick="deleteGoal('${goal.id}')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="goal-title">${goal.name}</h3>
+                        <p class="goal-target">Target: ${formatCurrency(goal.target)}</p>
+                        <div class="goal-progress-container">
+                            <div class="goal-progress-header">
+                                <span class="goal-progress-label">Progress</span>
+                                <span class="goal-progress-value">${progress}%</span>
+                            </div>
+                            <div class="goal-progress-bar">
+                                <div class="goal-progress-fill ${progressColor}" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                        <div class="goal-dates">
+                            <span>Current: ${formatCurrency(goal.current)}</span>
+                            <span>${new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        </div>
+                        <span class="goal-status ${status}">${statusText}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Open goal modal
+        function openGoalModal(isEdit = false) {
+            document.getElementById('goalModal').classList.add('show');
+            if (!isEdit) {
+                document.getElementById('goalModalTitle').textContent = 'Add New Goal';
+                document.getElementById('goalForm').reset();
+                document.getElementById('goalId').value = '';
+                
+                // Set default date to 1 year from now
+                const defaultDate = new Date();
+                defaultDate.setFullYear(defaultDate.getFullYear() + 1);
+                document.getElementById('goalDate').valueAsDate = defaultDate;
+            }
+        }
+
+        // Close goal modal
+        function closeGoalModal() {
+            document.getElementById('goalModal').classList.remove('show');
+            document.getElementById('goalForm').reset();
+        }
+
+        // Save goal
+        function saveGoal() {
+            const id = document.getElementById('goalId').value;
+            const name = document.getElementById('goalName').value;
+            const target = document.getElementById('goalTarget').value;
+            const current = document.getElementById('goalCurrent').value || 0;
+            const targetDate = document.getElementById('goalDate').value;
+            const type = document.getElementById('goalType').value;
+
+            if (!name || !target || !targetDate) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            if (id) {
+                // Update existing
+                const index = goals.findIndex(g => g.id === id);
+                if (index !== -1) {
+                    goals[index] = { id, name, target: parseFloat(target), current: parseFloat(current), targetDate, type };
+                    showToast('Goal updated successfully!', 'success');
+                }
+            } else {
+                // Add new
+                const newGoal = {
+                    id: Date.now().toString(),
+                    name,
+                    target: parseFloat(target),
+                    current: parseFloat(current),
+                    targetDate,
+                    type
+                };
+                goals.push(newGoal);
+                showToast('Goal added successfully!', 'success');
+            }
+
+            // Save to localStorage
+            localStorage.setItem('goals', JSON.stringify(goals));
+
+            // Update UI
+            updateGoalStats();
+            renderGoals();
+            closeGoalModal();
+        }
+
+        // Delete goal
+        function deleteGoal(id) {
+            if (!confirm('Are you sure you want to delete this goal?')) return;
+
+            goals = goals.filter(g => g.id !== id);
+            localStorage.setItem('goals', JSON.stringify(goals));
+            
+            updateGoalStats();
+            renderGoals();
+            showToast('Goal deleted successfully!', 'success');
+        }
+
+        // Show toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userEmail');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Close modal on overlay click
+        document.getElementById('goalModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeGoalModal();
+            }
+        });
+
+        // Contribute modal functions
+        function openContributeModal(goalId, goalName) {
+            const goal = goals.find(g => g.id === goalId);
+            if (!goal) return;
+            
+            document.getElementById('contributeGoalId').value = goalId;
+            document.getElementById('contributeModalTitle').textContent = 'Add to ' + goalName;
+            document.getElementById('contributeInfo').textContent = 
+                `Current: ${formatCurrency(goal.current)} | Target: ${formatCurrency(goal.target)} | Remaining: ${formatCurrency(goal.target - goal.current)}`;
+            document.getElementById('contributeAmount').value = '';
+            document.getElementById('contributeModal').classList.add('show');
+        }
+
+        function closeContributeModal() {
+            document.getElementById('contributeModal').classList.remove('show');
+        }
+
+        function submitContribution() {
+            const goalId = document.getElementById('contributeGoalId').value;
+            const amount = parseFloat(document.getElementById('contributeAmount').value);
+            
+            if (!amount || amount <= 0) {
+                showToast('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            const goalIndex = goals.findIndex(g => g.id === goalId);
+            if (goalIndex === -1) return;
+            
+            const goal = goals[goalIndex];
+            const remaining = goal.target - goal.current;
+            const addAmount = Math.min(amount, remaining);
+            
+            goals[goalIndex].current = (goals[goalIndex].current || 0) + addAmount;
+            localStorage.setItem('goals', JSON.stringify(goals));
+            
+            if (addAmount < amount) {
+                showToast(`Goal completed! Only ${formatCurrency(addAmount)} added.`, 'success');
+            } else {
+                showToast(`Added ${formatCurrency(addAmount)} to "${goal.name}"!`, 'success');
+            }
+            
+            updateGoalStats();
+            renderGoals();
+            closeContributeModal();
+        }
+
+        // Close contribute modal on overlay click
+        document.getElementById('contributeModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeContributeModal();
+            }
+        });
+
+        // Initialize
+        updateGoalStats();
+        renderGoals();
+    </script>
+</body>
+</html>
+
