@@ -3,42 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTP Email</title>
+    <title>Verify OTP - SpendTrack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/otp.css">
 </head>
 <body>
-<div class="content">
-    <div class="station1">
-        <div class="logo">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-        </svg>
-        SpendTrack
-        </div>
-        <div class="otpword">
-            <h3>Authentication Verify Identiy</h3>
-            <div class="email-content">
-                <div class="email-logo">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvUyIjn5qloWVHqVnUn75opgF4Mp8Hu4rEEQ&s" alt="Email Logo">
-                </div>
+    <div class="content">
+        <div class="station1 fade-in">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="logo-icon">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                SpendTrack
+            </div>
+            <div class="otpword">
+                <h3>Verify Your Identity</h3>
+                <p class="subtitle">Enter the 6-digit code sent to your email</p>
             </div>
         </div>
+        <form class="otp-form">
+            <div class="container-number">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="box otp-input" id="otp-1" autocomplete="one-time-code">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="box otp-input" id="otp-2" autocomplete="one-time-code">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="box otp-input" id="otp-3" autocomplete="one-time-code">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="box otp-input" id="otp-4" autocomplete="one-time-code">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="box otp-input" id="otp-5" autocomplete="one-time-code">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="box otp-input" id="otp-6" autocomplete="one-time-code">
+            </div>
+            <div class="error-message" id="error-msg"></div>
+        </form>
+        <div class="last-section">
+            <button type="submit" class="verify-btn">Verify OTP</button>
+            <p class="resend"><span id="timer">00:60</span> <a href="#" id="resend-link">Resend code</a></p>
+            <p><a href="login.html">← Go back to login</a></p>
+        </div>
     </div>
-    <div class="container-number">
-        <div class="box">1</div>
-        <div class="box">2</div>
-        <div class="box">3</div>
-        <div class="box">4</div>
-        <div class="box">5</div>
-        <div class="box">6</div>
-    </div>
-    <div class="last-section">
-        <button>login</button>
-        <p>Resend code</p>
-        <p>Go back to login</p>
-    </div>
-</div>
+    <script>
+    const inputs = document.querySelectorAll('.otp-input');
 
+    inputs.forEach((input, index) =>{
+        input.addEventListener('input',(e) =>{
+            e.target.value = e.target.value.replace(/[^0-9]/g,'');
+
+            if(e.target.value.length === 1 && index < inputs.length -1 ){
+                inputs[index + 1].focus();
+            }
+        });
+        input.addEventListener('keydown',(e) =>{
+            if(e.key === 'Backspace' && index > 0){
+                inputs[index - 1].focus();
+            }
+        });
+
+
+        input.addEventListener('paste', (e) => {
+        e.preventDefault();
+
+        const pasteData = (e.clipboardData || window.clipboardData)
+            .getData('text')
+            .replace(/[^0-9]/g, '');
+
+        if (!pasteData) return;
+
+        inputs.forEach((input, i) => {
+            input.value = pasteData[i] || '';
+        });
+
+        // Focus last filled box
+        const lastIndex = Math.min(pasteData.length, inputs.length) - 1;
+        if (lastIndex >= 0) {
+            inputs[lastIndex].focus();
+        }
+    });
+    });
+    </script>
 </body>
 </html>
