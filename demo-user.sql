@@ -1,4 +1,4 @@
--- Demo user for spendtrackfinance DB (run in phpMyAdmin or MySQL CLI)
+Restart MCP Server-- Demo user for spendtrackfinance DB (run in phpMyAdmin or MySQL CLI)
 -- Ensure 'users' table exists with columns: id (auto), email, password
 
 INSERT INTO users (email, password) VALUES 

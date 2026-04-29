@@ -79,48 +79,51 @@ loginForm.addEventListener('submit', async (e) => {
     loginBtn.disabled = true;
     loginBtn.textContent = 'Signing in...';
 
+try {
+    const response = await fetch('../frameworks/login.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+    });
+
+    // IMPORTANT: Read as text first to debug invalid JSON
+    const text = await response.text();
+    
+    let result;
     try {
-        // Real AJAX to backend
-        const response = await fetch('../frameworks/login.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password })
-        });
+        result = JSON.parse(text);
+    } catch (jsonError) {
+        console.error('Invalid JSON received:', text);
+        throw new Error('Server returned invalid response. Check PHP errors.');
+    }
 
-        const result = await response.json();
+    if (result.success) {
+        successMessage.classList.add('show');
+        loginBtn.classList.remove('btn-loading');
+        
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userEmail', email);
 
-        if (result.success) {
-            // Success
-            successMessage.classList.add('show');
-            loginBtn.classList.remove('btn-loading');
-            
-            // Optional localStorage (for frontend state)
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userEmail', email);
-
-            // Redirect to OTP page
-            setTimeout(() => {
-                window.location.href = '../auth/otp.html';
-            }, 1500);
-        } else {
-            // Backend error
-            loginBtn.classList.remove('btn-loading');
-            loginBtn.disabled = false;
-            loginBtn.textContent = 'Sign in';
-            
-            showError(passwordInput, passwordError, result.message || 'Login failed');
-        }
-    } catch (error) {
-        // Network/Server error
+        setTimeout(() => {
+            window.location.href = '../auth/otp.html';
+        }, 1500);
+    } else {
         loginBtn.classList.remove('btn-loading');
         loginBtn.disabled = false;
         loginBtn.textContent = 'Sign in';
         
-        showError(passwordInput, passwordError, 'Network error. Please try again.');
-        console.error('Login error:', error);
+        showError(passwordInput, passwordError, result.message || 'Login failed');
     }
+} catch (error) {
+    loginBtn.classList.remove('btn-loading');
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign in';
+    
+    showError(passwordInput, passwordError, 'Network error. Please try again.');
+    console.error('Login error:', error);
+}
 });
 
 // Check session on load (optional, for frontend-only)

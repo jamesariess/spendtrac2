@@ -258,12 +258,19 @@ signupForm.addEventListener('submit', async (e) => {
         signupBtn.textContent = 'Creating Account...';
 
         const response = await fetch('../frameworks/signup.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, confirmPassword })
-        });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, confirmPassword })
+});
 
-        const result = await response.json();
+const text = await response.text();
+let result;
+try {
+    result = JSON.parse(text);
+} catch (e) {
+    console.error("Invalid JSON response:", text);
+    throw new Error("Server returned invalid response");
+}
 
         if (result.success) {
             // Success - redirect to OTP page
@@ -273,8 +280,18 @@ signupForm.addEventListener('submit', async (e) => {
             // Store email in localStorage for OTP page
             localStorage.setItem('signupEmail', email);
 
+            // Inside if (result.success)
+showSuccessMessage("Account created successfully! Redirecting to login...");
+
+function showSuccessMessage(msg) {
+    const successDiv = document.createElement('div');
+    successDiv.className = 'form-success';
+    successDiv.textContent = msg;
+    signupForm.appendChild(successDiv);
+}
+
             setTimeout(() => {
-                window.location.href = '../auth/otp.html?mode=signup';
+        window.location.href = '../auth/login.html';
             }, 1500);
         } else {
             // Signup failed
