@@ -156,7 +156,205 @@ togglePasswordBtn.addEventListener('click', (e) => {
     togglePasswordBtn.classList.toggle('active');
 });
 
-// Form submission
+// New OTP elements
+const sendCodeBtn = document.getElementById('sendCodeBtn');
+const otpSection = document.getElementById('otpSection');
+const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+const otpCodeInput = document.getElementById('otpCode');
+const otpError = document.getElementById('otpError');
+const statusMessage = document.getElementById('statusMessage');
+const resendLink = document.getElementById('resendLink');
+const timerEl = document.getElementById('timer');
+let timeRemaining = 120;
+let resendTimer;
+let currentEmail = '';
+
+// OTP utilities
+function showStatus(message, isError = false) {
+    statusMessage.textContent = message;
+    statusMessage.style.backgroundColor = isError ? '#fee2e2' : '#dcfce7';
+    statusMessage.style.color = isError ? '#dc2626' : '#166534';
+    statusMessage.style.display = 'block';
+    statusMessage.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideStatus() {
+    statusMessage.style.display = 'none';
+}
+
+function startResendTimer() {
+    timeRemaining = 120;
+    resendLink.style.pointerEvents = 'none';
+    resendLink.style.opacity = '0.5';
+    
+    resendTimer = setInterval(() => {
+        timeRemaining--;
+        const mins = Math.floor(timeRemaining / 60);
+        const secs = timeRemaining % 60;
+        timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        
+        if (timeRemaining <= 0) {
+            clearInterval(resendTimer);
+            resendLink.style.pointerEvents = 'auto';
+            resendLink.style.opacity = '1';
+            timerEl.textContent = 'Resend';
+        }
+    }, 1000);
+}
+
+// Send code handler - only email + captcha
+sendCodeBtn.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const captchaAnswer = captchaAnswerInput.value.trim();
+    let hasError = false;
+
+    // Validate email
+    if (!email) {
+        showError(emailInput, emailError, 'Email is required');
+        hasError = true;
+    } else if (!isValidEmail(email)) {
+        showError(emailInput, emailError, 'Please enter a valid email address');
+        hasError = true;
+    }
+
+    // Validate CAPTCHA
+    if (!captchaAnswer) {
+        showError(captchaAnswerInput, captchaError, 'Please answer the CAPTCHA');
+        hasError = true;
+    }
+
+    if (hasError) return;
+
+    sendCodeBtn.disabled = true;
+    sendCodeBtn.textContent = 'Sending...';
+
+    try {
+        // Verify CAPTCHA
+        const captchaRes = await fetch('../frameworks/verify_captcha.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answer: captchaAnswer })
+        });
+
+        const captchaData = await captchaRes.json();
+
+        if (!captchaData.success) {
+            showError(captchaAnswerInput, captchaError, captchaData.message || 'CAPTCHA failed');
+            return;
+        }
+
+        // Send OTP (modified signup.php call - only email needed for init)
+        const response = await fetch('../frameworks/signup.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: email,
+                password: '', // Backend ignores if email new
+                confirmPassword: ''
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            currentEmail = email;
+            // Hide password fields, terms, show OTP section
+            document.querySelectorAll('.form-group:not(:first-child):not(.form-group:has(#sendCodeBtn))').forEach(el => {
+                el.style.display = 'none';
+            });
+            signupBtn.style.display = 'none';
+            otpSection.style.display = 'block';
+            showStatus('OTP sent to ' + email + '! Check your inbox.');
+            startResendTimer();
+            document.getElementById('code').style.display = 'none';
+            sendCodeBtn.style.display = 'none';
+        } else {
+            showError(emailInput, emailError, result.message);
+        }
+    } catch (error) {
+        showStatus('Network error. Please try again.', true);
+    } finally {
+        sendCodeBtn.disabled = false;
+        sendCodeBtn.textContent = 'Send Code';
+    }
+});
+
+// Verify OTP handler
+verifyOtpBtn.addEventListener('click', async () => {
+    const otp = otpCodeInput.value.trim().replace(/[^0-9]/g, '');
+
+    if (otp.length !== 6) {
+        showError(otpCodeInput, otpError, 'Enter 6-digit code');
+        return;
+    }
+
+    verifyOtpBtn.disabled = true;
+    verifyOtpBtn.textContent = 'Verifying...';
+
+    try {
+        // Verify OTP
+        const verifyRes = await fetch('../frameworks/verify_otp.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ otp })
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.success) {
+            // Complete signup
+            const completeRes = await fetch('../frameworks/complete_signup.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const completeData = await completeRes.json();
+
+            if (completeData.success) {
+                showStatus('Account created successfully! Redirecting to login...');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } else {
+                showStatus(completeData.message || 'Failed to complete signup', true);
+            }
+        } else {
+            showError(otpCodeInput, otpError, verifyData.message || 'Invalid OTP');
+            otpCodeInput.value = '';
+        }
+    } catch (error) {
+        showStatus('Network error. Please try again.', true);
+    } finally {
+        verifyOtpBtn.disabled = false;
+        verifyOtpBtn.textContent = 'Verify & Complete Signup';
+    }
+});
+
+// Resend OTP
+resendLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (timeRemaining > 0) return;
+
+    try {
+        const res = await fetch('../frameworks/resend_otp.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showStatus('New OTP sent to ' + currentEmail);
+            startResendTimer();
+        } else {
+            showStatus(data.message || 'Failed to resend OTP', true);
+        }
+    } catch (error) {
+        showStatus('Error resending OTP', true);
+    }
+});
+
+// Form submission - now only for validation display (sendCodeBtn handles actual flow)
 signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -265,17 +463,9 @@ signupForm.addEventListener('submit', async (e) => {
 
         const result = await response.json();
 
+        // This branch should not be reached - sendCodeBtn handles flow
         if (result.success) {
-            // Success - redirect to OTP page
-            signupBtn.classList.remove('btn-loading');
-            signupBtn.textContent = 'Redirecting...';
-
-            // Store email in localStorage for OTP page
-            localStorage.setItem('signupEmail', email);
-
-            setTimeout(() => {
-                window.location.href = '../auth/otp.html?mode=signup';
-            }, 1500);
+            showStatus('Please use Send Code button for signup flow.', false);
         } else {
             // Signup failed
             signupBtn.classList.remove('btn-loading');

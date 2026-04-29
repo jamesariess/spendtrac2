@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Check if email already exists
-        $stmt = $pdo->prepare('SELECT id FROM user WHERE email = :email');
+        $stmt = $pdo->prepare('SELECT user_id FROM user WHERE email = :email');
         $stmt->execute(['email' => $email]);
         if ($stmt->fetch()) {
             echo json_encode(['success' => false, 'message' => 'This email is already registered. Please login or use a different email.']);

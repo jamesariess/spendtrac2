@@ -1,11 +1,10 @@
-# OTP Design Fix - Task Progress
+# Signup Flow Fix - TODO
 
-## Plan Steps:
-1. [x] Create/Update auth/otp.html with proper OTP inputs, fixed structure, links.
-2. [x] Rewrite assets/css/otp.css with complete modern styles (inputs, button, responsive).
-3. [x] Test the page (open in browser).
-4. [ ] Add JS for OTP functionality if needed (assets/js/otp.js).
-5. [ ] Mark complete.
+## Plan Implementation Steps:
+- [x] Step 1: Update auth/signup.html with OTP section, button IDs, status div.
+- [x] Step 2: Update assets/js/signup.js with sendCode, verifyOtp handlers, OTP logic.
+- [ ] Step 3: Test send code → email received → verify → redirect login.
+- [ ] Step 4: Verify login flow unchanged (uses otp.html).
+- [ ] COMPLETE: Use attempt_completion.
 
-Current: Steps 1-2 complete, JS lint errors fixed (HTML entities in script). Ready for test.
-
+Current: Steps 1-2 complete. Now test flow.
