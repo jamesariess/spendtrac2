@@ -102,7 +102,7 @@ loginForm.addEventListener('submit', async (e) => {
 
             // Redirect to dashboard
             setTimeout(() => {
-                window.location.href = '../pages/dashboard.html';
+                window.location.href = '../pages/otp.html';
             }, 1500);
         } else {
             // Backend error
