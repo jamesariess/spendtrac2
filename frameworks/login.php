@@ -22,7 +22,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['user_id'];
+
+      $otp = rand(100000, 999999);
+
+      $_SESSION['otp'] = $otp;
+      $_SESSION['otp_email'] = $email;
+      $_SESSION['otp_expiry'] = time() + 300;
+       $_SESSION['user_id'] = $user['user_id'];
+
+      require '../vendor/autoload.php';
+      $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+      
+        try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'your_email@gmail.com';
+        $mail->Password = 'your_app_password';
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = 587;
+
+        $mail->setFrom('your_email@gmail.com', 'SpendTrack');
+        $mail->addAddress($email);
+
+        $mail->Subject = 'Your OTP Code';
+        $mail->Body = "Your OTP is: $otp";
+
+        $mail->send();
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'OTP sent to email'
+        ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'OTP sending failed'
+        ]);
+    }
+       
         echo json_encode(['success' => true, 'message' => 'Login successful']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Invalid email or password']);

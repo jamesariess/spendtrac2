@@ -79,6 +79,33 @@
         }
     });
     });
+
+  document.querySelector('.verify-btn').addEventListener('click', async () => {
+
+    const inputs = document.querySelectorAll('.otp-input');
+    let otp = '';
+
+    inputs.forEach(input => otp += input.value);
+
+    if (otp.length !== 6) {
+        document.getElementById('error-msg').textContent = "Enter complete OTP";
+        return;
+    }
+
+    const res = await fetch('../backend/verify_otp.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+        window.location.href = '../dashboard.html';
+    } else {
+        document.getElementById('error-msg').textContent = data.message;
+    }
+});
     </script>
 </body>
 </html>
