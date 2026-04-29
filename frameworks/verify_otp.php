@@ -1,11 +1,11 @@
-<?php 
+<?php
 
 session_start();
 header('Content-Type: application/json');
-
+include '../backend/conn.php';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-    
+
 $input = json_decode(file_get_contents('php://input'), true);
 $enteredOtp = $input['otp'] ?? '';
 session_regenerate_id(true);
@@ -30,10 +30,18 @@ if(time() > $_SESSION['otp_expiry']){
 }
 
 if($enteredOtp == $_SESSION['otp']){
+    // OTP verified - set authenticated session
+    $_SESSION['authenticated'] = true;
+    $_SESSION['otp_verified'] = true;
+
+    // Clean up OTP data
     unset($_SESSION['otp']);
     unset($_SESSION['otp_expiry']);
+    unset($_SESSION['otp_attempts']);
+
     echo json_encode(['success' => true, 'message' => 'OTP verified successfully']);
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid OTP']);
 }
 }
+?>

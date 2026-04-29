@@ -100,9 +100,9 @@ loginForm.addEventListener('submit', async (e) => {
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('userEmail', email);
 
-            // Redirect to dashboard
+            // Redirect to OTP page
             setTimeout(() => {
-                window.location.href = '../pages/otp.html';
+                window.location.href = '../auth/otp.html';
             }, 1500);
         } else {
             // Backend error
@@ -127,4 +127,14 @@ loginForm.addEventListener('submit', async (e) => {
 if (localStorage.getItem('isLoggedIn') === 'true') {
     window.location.href = '../pages/dashboard.html';
 }
+
+// Check if signup was successful
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('signup') === 'success') {
+    const signupSuccessMessage = document.getElementById('signupSuccessMessage');
+    if (signupSuccessMessage) {
+        signupSuccessMessage.classList.add('show');
+    }
+}
+
 

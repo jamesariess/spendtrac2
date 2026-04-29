@@ -17,54 +17,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $stmt = $pdo->prepare('SELECT * FROM user WHERE email = :email');
-    $stmt->execute(['email' => $email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $pdo->prepare('SELECT * FROM user WHERE email = :email');
+        $stmt->execute(['email' => $email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($user && password_verify($password, $user['password'])) {
+        if ($user && password_verify($password, $user['password'])) {
+            // Generate OTP
+            $otp = rand(100000, 999999);
 
-      $otp = rand(100000, 999999);
+            // Store in session
+            $_SESSION['otp'] = $otp;
+            $_SESSION['otp_email'] = $email;
+            $_SESSION['otp_expiry'] = time() + 300; // 5 minutes
+            $_SESSION['otp_attempts'] = 0;
+            $_SESSION['user_id'] = $user['user_id'];
 
-      $_SESSION['otp'] = $otp;
-      $_SESSION['otp_email'] = $email;
-      $_SESSION['otp_expiry'] = time() + 300;
-       $_SESSION['user_id'] = $user['user_id'];
+            require '../vendor/autoload.php';
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
 
-      require '../vendor/autoload.php';
-      $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-      
-        try {
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'your_email@gmail.com';
-        $mail->Password = 'your_app_password';
-        $mail->SMTPSecure = 'tls';
-        $mail->Port = 587;
+            try {
+                $mail->isSMTP();
+                $mail->Host = 'smtp.gmail.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'slatetransportsystem@gmail.com';
+                $mail->Password = 'mfkkigrgxtoascov';
+                $mail->SMTPSecure = 'tls';
+                $mail->Port = 587;
 
-        $mail->setFrom('your_email@gmail.com', 'SpendTrack');
-        $mail->addAddress($email);
+                $mail->setFrom('slatetransportsystem@gmail.com', 'SpendTrack');
+                $mail->addAddress($email);
 
-        $mail->Subject = 'Your OTP Code';
-        $mail->Body = "Your OTP is: $otp";
+                $mail->Subject = 'Your OTP Code';
+                $mail->Body = "Your OTP is: $otp\n\nThis code will expire in 5 minutes.";
 
-        $mail->send();
+                $mail->send();
 
-        echo json_encode([
-            'success' => true,
-            'message' => 'OTP sent to email'
-        ]);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'OTP sent to email'
+                ]);
 
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'OTP sending failed'
-        ]);
-    }
-       
-        echo json_encode(['success' => true, 'message' => 'Login successful']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
+            } catch (Exception $e) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to send OTP. Please try again.'
+                ]);
+            }
+
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'message' => 'Database error. Please try again.']);
     }
 } else {
     // GET: Simple redirect
@@ -72,3 +77,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 ?>
+

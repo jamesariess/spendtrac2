@@ -21,7 +21,7 @@
             </div>
             <div class="otpword">
                 <h3>Verify Your Identity</h3>
-                <p class="subtitle">Enter the 6-digit code sent to your email</p>
+                <p class="subtitle" id="otpSubtitle">Enter the 6-digit code sent to your email</p>
             </div>
         </div>
         <form class="otp-form">
@@ -38,11 +38,54 @@
         <div class="last-section">
             <button type="submit" class="verify-btn">Verify OTP</button>
             <p class="resend"><span id="timer">00:60</span> <a href="#" id="resend-link">Resend code</a></p>
-            <p><a href="login.html">← Go back to login</a></p>
+            <p><a href="#" id="backLink">← Go back to login</a></p>
         </div>
     </div>
     <script>
+    // Detect signup vs login mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const isSignupMode = urlParams.get('mode') === 'signup';
+    const otpSubtitle = document.getElementById('otpSubtitle');
+    const backLink = document.getElementById('backLink');
+
+    // Update subtitle and back link based on mode
+    if (isSignupMode) {
+        otpSubtitle.textContent = 'Enter the 6-digit code sent to your email to complete signup';
+        backLink.href = 'signup.html';
+        backLink.textContent = '← Go back to signup';
+    } else {
+        backLink.href = 'login.html';
+    }
+
     const inputs = document.querySelectorAll('.otp-input');
+    let resendDisabled = false;
+    let timeRemaining = 60;
+
+    // Timer function
+    function startTimer() {
+        const timerElement = document.getElementById('timer');
+        timeRemaining = 60;
+        resendDisabled = true;
+        document.getElementById('resend-link').style.pointerEvents = 'none';
+        document.getElementById('resend-link').style.opacity = '0.5';
+
+        const countdown = setInterval(() => {
+            timeRemaining--;
+            const mins = Math.floor(timeRemaining / 60);
+            const secs = timeRemaining % 60;
+            timerElement.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            if (timeRemaining <= 0) {
+                clearInterval(countdown);
+                resendDisabled = false;
+                document.getElementById('resend-link').style.pointerEvents = 'auto';
+                document.getElementById('resend-link').style.opacity = '1';
+            }
+        }, 1000);
+    }
+
+    // Start timer on page load
+    window.addEventListener('load', startTimer);
 
     inputs.forEach((input, index) =>{
         input.addEventListener('input',(e) =>{
@@ -57,7 +100,6 @@
                 inputs[index - 1].focus();
             }
         });
-
 
         input.addEventListener('paste', (e) => {
         e.preventDefault();
@@ -80,32 +122,91 @@
     });
     });
 
-  document.querySelector('.verify-btn').addEventListener('click', async () => {
+    // Resend OTP
+    document.getElementById('resend-link').addEventListener('click', async (e) => {
+        e.preventDefault();
 
-    const inputs = document.querySelectorAll('.otp-input');
-    let otp = '';
+        if (resendDisabled) return;
 
-    inputs.forEach(input => otp += input.value);
+        try {
+            const res = await fetch('../frameworks/resend_otp.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
 
-    if (otp.length !== 6) {
-        document.getElementById('error-msg').textContent = "Enter complete OTP";
-        return;
-    }
+            const data = await res.json();
 
-    const res = await fetch('../backend/verify_otp.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp })
+            if (data.success) {
+                document.getElementById('error-msg').textContent = 'OTP resent to your email!';
+                document.getElementById('error-msg').style.color = '#10b981';
+                startTimer();
+            } else {
+                document.getElementById('error-msg').textContent = data.message || 'Failed to resend OTP';
+                document.getElementById('error-msg').style.color = '#ef4444';
+            }
+        } catch (error) {
+            document.getElementById('error-msg').textContent = 'Error resending OTP';
+            document.getElementById('error-msg').style.color = '#ef4444';
+        }
     });
 
-    const data = await res.json();
+    // Verify OTP
+    document.querySelector('.verify-btn').addEventListener('click', async () => {
 
-    if (data.success) {
-        window.location.href = '../dashboard.html';
-    } else {
-        document.getElementById('error-msg').textContent = data.message;
-    }
-});
+        const inputs = document.querySelectorAll('.otp-input');
+        let otp = '';
+
+        inputs.forEach(input => otp += input.value);
+
+        if (otp.length !== 6) {
+            document.getElementById('error-msg').textContent = "Enter complete OTP";
+            document.getElementById('error-msg').style.color = '#ef4444';
+            return;
+        }
+
+        const res = await fetch('../frameworks/verify_otp.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ otp })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            // For signup mode, we need to complete the signup first
+            if (isSignupMode) {
+                // Call complete_signup endpoint
+                try {
+                    const completeRes = await fetch('../frameworks/complete_signup.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const completeData = await completeRes.json();
+
+                    if (completeData.success) {
+                        // Clear signup data from localStorage
+                        localStorage.removeItem('signupEmail');
+
+                        // Redirect to login
+                        window.location.href = '../auth/login.html?signup=success';
+                    } else {
+                        document.getElementById('error-msg').textContent = completeData.message || 'Failed to complete signup';
+                        document.getElementById('error-msg').style.color = '#ef4444';
+                    }
+                } catch (error) {
+                    document.getElementById('error-msg').textContent = 'Error completing signup';
+                    document.getElementById('error-msg').style.color = '#ef4444';
+                }
+            } else {
+                // Login mode - go to dashboard
+                window.location.href = '../pages/dashboard.html';
+            }
+        } else {
+            document.getElementById('error-msg').textContent = data.message;
+            document.getElementById('error-msg').style.color = '#ef4444';
+        }
+    });
     </script>
 </body>
 </html>

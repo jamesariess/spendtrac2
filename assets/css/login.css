@@ -397,6 +397,16 @@
         }
 
         /* --- RESPONSIVE --- */
+        @media (max-width: 1200px) {
+            .login-left {
+                padding: 40px 30px;
+            }
+
+            .login-right {
+                padding: 40px 30px;
+            }
+        }
+
         @media (max-width: 968px) {
             .login-left {
                 display: none;
@@ -405,11 +415,76 @@
             .login-right {
                 flex: none;
                 width: 100%;
-                padding: 40px 24px;
+                padding: 20px;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .login-form-container {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+            }
+
+            .login-right {
+                padding: 16px;
+            }
+
+            .login-form-container {
+                width: 100%;
+            }
+
+            .login-form-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .login-form-header p {
+                font-size: 0.85rem;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            .form-input {
+                padding: 12px 14px;
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+
+            .social-login {
+                flex-direction: column;
+            }
+
+            .social-btn {
+                flex: 1;
             }
         }
 
         @media (max-width: 480px) {
+            .login-right {
+                padding: 12px;
+            }
+
+            .login-form-container {
+                width: 100%;
+            }
+
+            .login-form-header h2 {
+                font-size: 1.25rem;
+            }
+
             .form-row {
                 flex-direction: column;
                 gap: 12px;
@@ -418,5 +493,13 @@
             
             .forgot-link {
                 align-self: flex-end;
+            }
+
+            .divider {
+                margin: 20px 0;
+            }
+
+            .demo-credentials {
+                padding: 12px;
             }
         }

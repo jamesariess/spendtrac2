@@ -192,14 +192,26 @@ body::before {
     margin-bottom: 8px;
 }
 
+.resend {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
 .resend a {
     color: var(--primary);
     text-decoration: none;
     font-weight: 500;
+    transition: var(--transition);
 }
 
 .resend a:hover {
     text-decoration: underline;
+}
+
+#timer {
+    font-weight: 600;
+    color: var(--primary);
 }
 
 .last-section a:hover {
