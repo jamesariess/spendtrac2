@@ -32,4 +32,5 @@ return array(
     'ReflectionConstant' => $vendorDir . '/symfony/polyfill-php84/Resources/stubs/ReflectionConstant.php',
     'RoundingMode' => $vendorDir . '/symfony/polyfill-php84/Resources/stubs/RoundingMode.php',
     'SQLite3Exception' => $vendorDir . '/symfony/polyfill-php83/Resources/stubs/SQLite3Exception.php',
+    '©' => $vendorDir . '/symfony/cache/Traits/ValueWrapper.php',
 );

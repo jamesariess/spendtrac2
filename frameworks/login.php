@@ -29,7 +29,7 @@ if (strlen($password) < 6) {
 }
 
 try {
-    $stmt = $pdo->prepare('SELECT user_id, email, password FROM user WHERE email = :email LIMIT 1');
+    $stmt = $pdo->prepare('SELECT * FROM user WHERE email = :email LIMIT 1');
     $stmt->execute(['email' => $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 

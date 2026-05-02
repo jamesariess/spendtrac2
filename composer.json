@@ -1,5 +1,15 @@
 {
     "require-dev": {
         "laravel/breeze": "^2.4"
+    },
+    "require": {
+        "jstolpe/instagram-graph-api-php-sdk": "^1.0",
+        "phpro/grumphp": "^2.20",
+        "phpmailer/phpmailer": "^7.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpro/grumphp": true
+        }
     }
 }
