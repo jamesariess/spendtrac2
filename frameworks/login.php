@@ -59,10 +59,74 @@ try {
         $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
-        $mail->setFrom('slatetransportsystem@gmail.com', 'SpendTrack');
+      $mail->setFrom('slatetransportsystem@gmail.com', 'SpendTrack');
         $mail->addAddress($email);
-        $mail->Subject = 'SpendTrack - Login Verification Code';
-        $mail->Body    = "Hello,\n\nYour login OTP code is: $otp\n\nThis code will expire in 5 minutes.\n\nIf you did not request this, please ignore this email.";
+        $mail->Subject = 'Your SpendTrack Login Code';
+
+        // Beautiful HTML Email Template
+        $htmlBody = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+                .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 30px 20px; text-align: center; }
+                .content { padding: 40px 30px; text-align: center; }
+                .otp-code { 
+                    font-size: 32px; 
+                    font-weight: bold; 
+                    letter-spacing: 8px; 
+                    color: #4f46e5; 
+                    background: #f8fafc; 
+                    padding: 20px; 
+                    border-radius: 8px; 
+                    margin: 20px 0;
+                    border: 2px dashed #6366f1;
+                }
+                .footer { 
+                    background: #f8fafc; 
+                    padding: 20px; 
+                    text-align: center; 
+                    color: #64748b; 
+                    font-size: 14px;
+                }
+                .btn { 
+                    display: inline-block; 
+                    background: #4f46e5; 
+                    color: white; 
+                    padding: 12px 30px; 
+                    text-decoration: none; 
+                    border-radius: 6px; 
+                    margin-top: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>SpendTrack</h1>
+                    <p>Secure Login Verification</p>
+                </div>
+                <div class="content">
+                    <h2>Hello there!</h2>
+                    <p>Your login verification code is:</p>
+                    <div class="otp-code">' . $otp . '</div>
+                    <p>This code will expire in <strong>5 minutes</strong>.</p>
+                    <p><small>For security reasons, please do not share this code with anyone.</small></p>
+                </div>
+                <div class="footer">
+                    <p>© ' . date('Y') . ' SpendTrack Finance. All rights reserved.</p>
+                    <p>This is an automated message. If you did not request this code, please ignore it.</p>
+                </div>
+            </div>
+        </body>
+        </html>';
+
+        $mail->isHTML(true);
+        $mail->Body = $htmlBody;
+        $mail->AltBody = "Your SpendTrack OTP is: $otp (expires in 5 minutes)";
 
         $mail->send();
 
