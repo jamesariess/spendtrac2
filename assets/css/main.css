@@ -15,6 +15,19 @@
             --transition: all 0.3s ease;
             --error: #ef4444;
             --success: #22c55e;
+      
+            --accent: #8B5CF6;
+            --bg-light: #F8FAFC;
+            --bg-white: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --transition: all 0.3s ease;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar-width: 260px;
         }
 
         * {
