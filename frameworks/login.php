@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $input = json_decode(file_get_contents('php://input'), true);
 $email    = trim($input['email'] ?? '');
 $password = $input['password'] ?? '';
+$remember = !empty($input['rememberMe']);
 
 // Basic validation
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -54,6 +55,7 @@ try {
         $_SESSION['otp_expiry']   = time() + 300;
         $_SESSION['otp_attempts'] = 0;
         $_SESSION['login_mode']   = true;
+        $_SESSION['remember_me']  = $remember;
 
         // Send OTP Email
         require_once '../vendor/autoload.php';

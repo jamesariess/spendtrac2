@@ -7,6 +7,8 @@ require_once __DIR__ . '/../backend/security.php';
 
 function require_page_auth(PDO $pdo): array
 {
+    bootstrap_remembered_user($pdo);
+
     if (empty($_SESSION['authenticated']) || empty($_SESSION['user_id'])) {
         header('Location: ../auth/login.html');
         exit;
@@ -160,4 +162,3 @@ function render_layout(string $title, string $active, string $content, array $us
 </html>
     <?php
 }
-

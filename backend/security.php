@@ -6,6 +6,25 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+function bootstrap_remembered_user(PDO $pdo): void
+{
+    if (!empty($_SESSION['authenticated']) || empty($_COOKIE['spendtrack_remember'])) {
+        return;
+    }
+
+    $tokenHash = hash('sha256', $_COOKIE['spendtrack_remember']);
+    $stmt = $pdo->prepare('SELECT user_id, email FROM user WHERE remember_token = :remember_token LIMIT 1');
+    $stmt->execute([':remember_token' => $tokenHash]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user) {
+        session_regenerate_id(true);
+        $_SESSION['authenticated'] = true;
+        $_SESSION['user_id'] = (int) $user['user_id'];
+        $_SESSION['user_email'] = $user['email'];
+    }
+}
+
 function json_response(array $payload, int $statusCode = 200): void
 {
     http_response_code($statusCode);
@@ -30,6 +49,12 @@ function require_post_json(): array
 
 function require_auth(): int
 {
+    global $pdo;
+
+    if (isset($pdo) && $pdo instanceof PDO) {
+        bootstrap_remembered_user($pdo);
+    }
+
     if (empty($_SESSION['authenticated']) || empty($_SESSION['user_id'])) {
         json_response(['success' => false, 'message' => 'Authentication required'], 401);
     }

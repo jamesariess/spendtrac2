@@ -37,12 +37,28 @@ if($enteredOtp == $_SESSION['otp']){
     $_SESSION['user_id'] = $_SESSION['otp_user_id'] ?? null;
     $_SESSION['user_email'] = $_SESSION['otp_email'] ?? null;
 
+    if (!empty($_SESSION['remember_me']) && !empty($_SESSION['user_id'])) {
+        $rememberToken = bin2hex(random_bytes(32));
+        $stmt = $pdo->prepare('UPDATE user SET remember_token = :remember_token WHERE user_id = :user_id');
+        $stmt->execute([
+            ':remember_token' => hash('sha256', $rememberToken),
+            ':user_id' => (int) $_SESSION['user_id'],
+        ]);
+        setcookie('spendtrack_remember', $rememberToken, [
+            'expires' => time() + 60 * 60 * 24 * 30,
+            'path' => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
     // Clean up OTP data
     unset($_SESSION['otp']);
     unset($_SESSION['otp_user_id']);
     unset($_SESSION['otp_email']);
     unset($_SESSION['otp_expiry']);
     unset($_SESSION['otp_attempts']);
+    unset($_SESSION['remember_me']);
 
     echo json_encode(['success' => true, 'message' => 'OTP verified successfully']);
 } else {

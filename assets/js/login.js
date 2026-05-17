@@ -49,6 +49,7 @@ loginForm.addEventListener('submit', async (e) => {
 
     const email = emailInput.value.trim();
     const password = passwordInput.value;
+    const rememberMe = document.getElementById('rememberMe')?.checked || false;
     let hasError = false;
 
     // Client-side validation
@@ -85,7 +86,7 @@ try {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, rememberMe })
     });
 
     // IMPORTANT: Read as text first to debug invalid JSON
