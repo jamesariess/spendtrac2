@@ -24,13 +24,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     render();
     document.getElementById('budgetForm').addEventListener('submit', async e => {
         e.preventDefault();
-        const payload = Object.fromEntries(new FormData(e.target).entries());
-        payload.csrfToken = appState.csrfToken;
-        const data = await apiFetch('../api/finance.php?action=save_budget', { method: 'POST', body: JSON.stringify(payload) });
-        appToast(data.message, data.success ? 'success' : 'error');
-        await loadAppData(); render();
+        await withButtonLoading(e.target.querySelector('[type="submit"]'), 'Saving budget...', async () => {
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.csrfToken = appState.csrfToken;
+            const data = await apiFetch('../api/finance.php?action=save_budget', { method: 'POST', body: JSON.stringify(payload) });
+            appToast(data.message, data.success ? 'success' : 'error');
+            await loadAppData('Refreshing budgets...'); render();
+        });
     });
 });
 </script>
 <?php render_layout('Budget Planner', 'budget', ob_get_clean(), $user, ['subtitle' => 'Plan spend before it happens']); ?>
-

@@ -73,13 +73,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const deleteId = event.target.closest('[data-delete-transaction]')?.dataset.deleteTransaction;
         const editId = event.target.closest('[data-edit-transaction]')?.dataset.editTransaction;
         if (deleteId && confirm('Delete this transaction?')) {
-            const data = await apiFetch('../api/finance.php?action=delete_transaction', {
-                method: 'POST',
-                body: JSON.stringify({ csrfToken: appState.csrfToken, transaction_id: deleteId })
+            const button = event.target.closest('[data-delete-transaction]');
+            await withButtonLoading(button, 'Deleting...', async () => {
+                const data = await apiFetch('../api/finance.php?action=delete_transaction', {
+                    method: 'POST',
+                    body: JSON.stringify({ csrfToken: appState.csrfToken, transaction_id: deleteId })
+                });
+                appToast(data.message || 'Deleted', data.success ? 'success' : 'error');
+                await loadAppData('Refreshing transactions...');
+                applyTransactionFilter();
             });
-            appToast(data.message || 'Deleted', data.success ? 'success' : 'error');
-            await loadAppData();
-            applyTransactionFilter();
         }
         if (editId) {
             const item = appState.transactions.find(row => String(row.transaction_id) === String(editId));
@@ -104,4 +107,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 <?php
 render_layout('Transactions', 'transactions', ob_get_clean(), $user, ['subtitle' => 'Full transaction ledger']);
-

@@ -28,16 +28,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadAppData();
     document.getElementById('settingsForm').addEventListener('submit', async e => {
         e.preventDefault();
-        const payload = Object.fromEntries(new FormData(e.target).entries());
-        payload.csrfToken = appState.csrfToken;
-        const data = await apiFetch('../api/finance.php?action=save_profile', { method: 'POST', body: JSON.stringify(payload) });
-        appToast(data.message, data.success ? 'success' : 'error');
+        await withButtonLoading(e.target.querySelector('[type="submit"]'), 'Saving settings...', async () => {
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.csrfToken = appState.csrfToken;
+            const data = await apiFetch('../api/finance.php?action=save_profile', { method: 'POST', body: JSON.stringify(payload) });
+            appToast(data.message, data.success ? 'success' : 'error');
+        });
     });
     document.querySelectorAll('[data-billing]').forEach(button => button.addEventListener('click', async () => {
-        const data = await apiFetch('../api/billing.php', { method: 'POST', body: JSON.stringify({ csrfToken: appState.csrfToken, provider: button.dataset.billing, plan: 'premium' }) });
-        appToast(data.message, data.success ? 'success' : 'error');
+        await withButtonLoading(button, 'Preparing checkout...', async () => {
+            const data = await apiFetch('../api/billing.php', { method: 'POST', body: JSON.stringify({ csrfToken: appState.csrfToken, provider: button.dataset.billing, plan: 'premium' }) });
+            appToast(data.message, data.success ? 'success' : 'error');
+        });
     }));
 });
 </script>
 <?php render_layout('Settings', 'settings', ob_get_clean(), $user, ['subtitle' => 'Secure account and app preferences']); ?>
-

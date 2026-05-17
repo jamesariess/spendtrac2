@@ -77,6 +77,7 @@ loginForm.addEventListener('submit', async (e) => {
 
     // Show loading
     loginBtn.classList.add('btn-loading');
+    loginBtn.classList.add('loading');
     loginBtn.disabled = true;
     loginBtn.textContent = 'Signing in...';
 
@@ -103,6 +104,7 @@ try {
     if (result.success) {
         successMessage.classList.add('show');
         loginBtn.classList.remove('btn-loading');
+        loginBtn.classList.remove('loading');
         successMessage.querySelector('span').textContent = result.message || 'Login successful! Redirecting to OTP verification...';
 
         if (result.devOtp) {
@@ -116,6 +118,7 @@ try {
         }, 1500);
     } else {
         loginBtn.classList.remove('btn-loading');
+        loginBtn.classList.remove('loading');
         loginBtn.disabled = false;
         loginBtn.textContent = 'Sign in';
         
@@ -123,6 +126,7 @@ try {
     }
 } catch (error) {
     loginBtn.classList.remove('btn-loading');
+    loginBtn.classList.remove('loading');
     loginBtn.disabled = false;
     loginBtn.textContent = 'Sign in';
     

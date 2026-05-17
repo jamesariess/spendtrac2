@@ -111,8 +111,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             appToast('OCR library is not available. Check your internet connection.', 'error');
             return;
         }
-        appToast('Scanning bill. This may take a moment...');
-        const result = await Tesseract.recognize(file, 'eng');
+        showPageLoader('Scanning bill image...');
+        let result;
+        try {
+            result = await Tesseract.recognize(file, 'eng');
+        } finally {
+            hidePageLoader();
+        }
         const text = result.data.text || '';
         const parsed = parseBillText(text);
         document.getElementById('scanTextPreview').textContent = text || 'No readable text found.';

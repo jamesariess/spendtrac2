@@ -155,6 +155,19 @@ function render_layout(string $title, string $active, string $content, array $us
         </main>
     </div>
 
+    <div class="page-loader" id="pageLoader" aria-live="polite" aria-busy="true">
+        <div class="loader-card">
+            <div class="loader-mark">
+                <span></span>
+                <i data-lucide="badge-dollar-sign"></i>
+            </div>
+            <strong>Loading SpendTrack</strong>
+            <p id="pageLoaderText">Preparing your financial workspace...</p>
+            <div class="loader-bar"><span></span></div>
+        </div>
+    </div>
+
+    <div class="top-progress" id="topProgress" aria-hidden="true"><span></span></div>
     <div class="toast" id="appToast" role="status" aria-live="polite"></div>
     <script src="../assets/js/app-auth.js"></script>
     <script src="../assets/js/app.js"></script>

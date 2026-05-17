@@ -27,13 +27,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     render();
     document.getElementById('goalForm').addEventListener('submit', async e => {
         e.preventDefault();
-        const payload = Object.fromEntries(new FormData(e.target).entries());
-        payload.csrfToken = appState.csrfToken;
-        const data = await apiFetch('../api/finance.php?action=save_goal', { method: 'POST', body: JSON.stringify(payload) });
-        appToast(data.message, data.success ? 'success' : 'error');
-        await loadAppData(); render();
+        await withButtonLoading(e.target.querySelector('[type="submit"]'), 'Saving goal...', async () => {
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.csrfToken = appState.csrfToken;
+            const data = await apiFetch('../api/finance.php?action=save_goal', { method: 'POST', body: JSON.stringify(payload) });
+            appToast(data.message, data.success ? 'success' : 'error');
+            await loadAppData('Refreshing goals...'); render();
+        });
     });
 });
 </script>
 <?php render_layout('Goals', 'analytics', ob_get_clean(), $user, ['subtitle' => 'Build toward long-term targets']); ?>
-

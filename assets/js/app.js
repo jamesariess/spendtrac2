@@ -8,6 +8,62 @@ const appState = {
     csrfToken: ''
 };
 
+let pendingRequests = 0;
+
+function showTopProgress() {
+    pendingRequests += 1;
+    document.getElementById('topProgress')?.classList.add('show');
+}
+
+function hideTopProgress() {
+    pendingRequests = Math.max(0, pendingRequests - 1);
+    if (pendingRequests === 0) {
+        document.getElementById('topProgress')?.classList.remove('show');
+    }
+}
+
+function showPageLoader(message = 'Preparing your financial workspace...') {
+    const loader = document.getElementById('pageLoader');
+    const text = document.getElementById('pageLoaderText');
+    if (text) text.textContent = message;
+    loader?.classList.add('show');
+    document.body.style.cursor = 'progress';
+}
+
+function hidePageLoader() {
+    document.getElementById('pageLoader')?.classList.remove('show');
+    document.body.style.cursor = '';
+}
+
+function setButtonLoading(button, isLoading, label = 'Working...') {
+    if (!button) return;
+    if (isLoading) {
+        button.dataset.originalText = button.innerHTML;
+        button.dataset.loadingLabel = label;
+        button.classList.add('loading');
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        button.setAttribute('aria-label', label);
+    } else {
+        button.classList.remove('loading');
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        if (button.dataset.originalText) {
+            button.innerHTML = button.dataset.originalText;
+            delete button.dataset.originalText;
+        }
+    }
+}
+
+async function withButtonLoading(button, label, task) {
+    setButtonLoading(button, true, label);
+    try {
+        return await task();
+    } finally {
+        setButtonLoading(button, false);
+    }
+}
+
 function money(value, currency = appState.currency) {
     return new Intl.NumberFormat(appState.locale, {
         style: 'currency',
@@ -24,39 +80,54 @@ function appToast(message, type = 'success') {
 }
 
 async function apiFetch(url, options = {}) {
-    const response = await fetch(url, {
-        credentials: 'same-origin',
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...(options.headers || {})
-        }
-    });
+    const showProgress = options.showProgress !== false;
+    const fetchOptions = { ...options };
+    delete fetchOptions.showProgress;
 
-    const data = await response.json().catch(() => ({ success: false, message: 'Invalid server response' }));
-    if (response.status === 401) {
-        window.location.href = '../auth/login.html';
+    if (showProgress) showTopProgress();
+
+    try {
+        const response = await fetch(url, {
+            credentials: 'same-origin',
+            ...fetchOptions,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(fetchOptions.headers || {})
+            }
+        });
+
+        const data = await response.json().catch(() => ({ success: false, message: 'Invalid server response' }));
+        if (response.status === 401) {
+            window.location.href = '../auth/login.html';
+        }
+        return data;
+    } finally {
+        if (showProgress) hideTopProgress();
     }
-    return data;
 }
 
-async function loadAppData() {
-    const session = await getSession();
-    if (!session.authenticated) {
-        window.location.href = '../auth/login.html';
-        return null;
+async function loadAppData(message = 'Loading your financial data...') {
+    showPageLoader(message);
+    try {
+        const session = await getSession();
+        if (!session.authenticated) {
+            window.location.href = '../auth/login.html';
+            return null;
+        }
+
+        appState.csrfToken = session.csrfToken || '';
+        appState.currency = session.user?.currency || 'USD';
+        appState.locale = session.user?.locale || appState.locale;
+
+        const data = await apiFetch('../api/finance.php?action=overview');
+        if (data.success) {
+            Object.assign(appState, data);
+        }
+
+        return data;
+    } finally {
+        hidePageLoader();
     }
-
-    appState.csrfToken = session.csrfToken || '';
-    appState.currency = session.user?.currency || 'USD';
-    appState.locale = session.user?.locale || appState.locale;
-
-    const data = await apiFetch('../api/finance.php?action=overview');
-    if (data.success) {
-        Object.assign(appState, data);
-    }
-
-    return data;
 }
 
 function wireShell() {
@@ -136,23 +207,28 @@ function escapeHtml(value) {
 }
 
 async function saveTransactionFromForm(form) {
+    const submitter = form.querySelector('[type="submit"]');
+    setButtonLoading(submitter, true, 'Saving transaction...');
     const payload = Object.fromEntries(new FormData(form).entries());
     payload.csrfToken = appState.csrfToken;
 
-    const data = await apiFetch('../api/finance.php?action=save_transaction', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-    });
+    try {
+        const data = await apiFetch('../api/finance.php?action=save_transaction', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
 
-    if (!data.success) {
-        appToast(data.message || 'Could not save transaction', 'error');
-        return false;
+        if (!data.success) {
+            appToast(data.message || 'Could not save transaction', 'error');
+            return false;
+        }
+
+        appToast(data.message || 'Transaction saved');
+        await loadAppData('Refreshing transactions...');
+        return true;
+    } finally {
+        setButtonLoading(submitter, false);
     }
-
-    appToast(data.message || 'Transaction saved');
-    await loadAppData();
-    return true;
 }
 
 document.addEventListener('DOMContentLoaded', wireShell);
-

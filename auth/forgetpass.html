@@ -6,6 +6,11 @@
     <title>Forgot Password | SpendTrack</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/login.css">
+    <style>
+        .btn.loading { position: relative; color: transparent; pointer-events: none; }
+        .btn.loading::after { content: ""; position: absolute; width: 18px; height: 18px; border: 2px solid #fff; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
     <div class="login-left">
@@ -39,6 +44,7 @@
         const button = document.getElementById('submitBtn');
         const messageBox = document.getElementById('messageBox');
         button.disabled = true;
+        button.classList.add('loading');
         button.textContent = 'Sending...';
         const response = await fetch('../api/account.php?action=request_password_reset', {
             method: 'POST',
@@ -47,6 +53,7 @@
         });
         const data = await response.json();
         button.disabled = false;
+        button.classList.remove('loading');
         button.textContent = 'Send reset link';
         messageBox.classList.add('show');
         messageBox.querySelector('span').textContent = data.devToken

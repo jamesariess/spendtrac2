@@ -13,10 +13,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const list = document.getElementById('notificationList');
     list.innerHTML = appState.notifications.length ? appState.notifications.map(n => `<article class="card"><strong>${escapeHtml(n.title)}</strong><p>${escapeHtml(n.body)}</p><span class="tag">${n.read_at ? 'Read' : 'Unread'}</span></article>`).join('') : '<div class="empty-state">No notifications yet.</div>';
     document.getElementById('markRead').addEventListener('click', async () => {
-        const data = await apiFetch('../api/finance.php?action=mark_notifications_read', { method: 'POST', body: JSON.stringify({ csrfToken: appState.csrfToken }) });
-        appToast(data.message, data.success ? 'success' : 'error');
+        await withButtonLoading(document.getElementById('markRead'), 'Updating...', async () => {
+            const data = await apiFetch('../api/finance.php?action=mark_notifications_read', { method: 'POST', body: JSON.stringify({ csrfToken: appState.csrfToken }) });
+            appToast(data.message, data.success ? 'success' : 'error');
+            await loadAppData('Refreshing notifications...');
+        });
     });
 });
 </script>
 <?php render_layout('Notifications', 'notifications', ob_get_clean(), $user, ['subtitle' => 'Stay ahead of money events']); ?>
-
