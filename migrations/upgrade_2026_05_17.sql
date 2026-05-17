@@ -1,44 +1,21 @@
-CREATE DATABASE IF NOT EXISTS spendtrackfinance
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
-
 USE spendtrackfinance;
 
-CREATE TABLE IF NOT EXISTS user (
-    user_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(191) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
-    display_name VARCHAR(120) NULL,
-    currency CHAR(3) NOT NULL DEFAULT 'USD',
-    locale VARCHAR(12) NOT NULL DEFAULT 'en-US',
-    timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
-    email_verified_at TIMESTAMP NULL,
-    remember_token VARCHAR(100) NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ALTER TABLE user
+    ADD COLUMN role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+    ADD COLUMN display_name VARCHAR(120) NULL,
+    ADD COLUMN currency CHAR(3) NOT NULL DEFAULT 'USD',
+    ADD COLUMN locale VARCHAR(12) NOT NULL DEFAULT 'en-US',
+    ADD COLUMN timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
+    ADD COLUMN email_verified_at TIMESTAMP NULL,
+    ADD COLUMN remember_token VARCHAR(100) NULL;
 
-CREATE TABLE IF NOT EXISTS transactions (
-    transaction_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id INT UNSIGNED NOT NULL,
-    type ENUM('income', 'expense') NOT NULL,
-    description VARCHAR(120) NOT NULL,
-    amount DECIMAL(12, 2) NOT NULL,
-    currency CHAR(3) NOT NULL DEFAULT 'USD',
-    category VARCHAR(40) NOT NULL,
-    payment_method VARCHAR(40) NULL,
-    notes TEXT NULL,
-    receipt_path VARCHAR(255) NULL,
-    is_recurring TINYINT(1) NOT NULL DEFAULT 0,
-    recurring_interval ENUM('weekly', 'monthly', 'yearly') NULL,
-    transaction_date DATE NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_transactions_user_date (user_id, transaction_date),
-    CONSTRAINT fk_transactions_user
-        FOREIGN KEY (user_id) REFERENCES user (user_id)
-        ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ALTER TABLE transactions
+    ADD COLUMN currency CHAR(3) NOT NULL DEFAULT 'USD',
+    ADD COLUMN payment_method VARCHAR(40) NULL,
+    ADD COLUMN notes TEXT NULL,
+    ADD COLUMN receipt_path VARCHAR(255) NULL,
+    ADD COLUMN is_recurring TINYINT(1) NOT NULL DEFAULT 0,
+    ADD COLUMN recurring_interval ENUM('weekly', 'monthly', 'yearly') NULL;
 
 CREATE TABLE IF NOT EXISTS budgets (
     budget_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

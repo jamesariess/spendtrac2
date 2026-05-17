@@ -71,10 +71,9 @@ function current_user(PDO $pdo): ?array
         return null;
     }
 
-    $stmt = $pdo->prepare('SELECT user_id, email FROM user WHERE user_id = :user_id LIMIT 1');
+    $stmt = $pdo->prepare('SELECT user_id, email, role, display_name, currency, locale, timezone, email_verified_at FROM user WHERE user_id = :user_id LIMIT 1');
     $stmt->execute([':user_id' => (int) $_SESSION['user_id']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     return $user ?: null;
 }
-
