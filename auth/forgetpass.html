@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password | SpendTrack</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/login.css">
+</head>
+<body>
+    <div class="login-left">
+        <div class="logo">SpendTrack</div>
+        <div class="login-left-content">
+            <h1>Recover access securely</h1>
+            <p>Generate a password reset token and continue protecting your financial workspace.</p>
+        </div>
+    </div>
+    <div class="login-right">
+        <div class="login-form-container">
+            <div class="login-form-header">
+                <h2>Forgot password</h2>
+                <p>Remembered it? <a href="login.html">Back to login</a></p>
+            </div>
+            <div class="success-message" id="messageBox"><span></span></div>
+            <form id="forgotForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email address</label>
+                    <input class="form-input" id="email" name="email" type="email" required>
+                    <div class="form-error" id="emailError"></div>
+                </div>
+                <button class="btn btn-primary" type="submit" id="submitBtn">Send reset link</button>
+            </form>
+        </div>
+    </div>
+    <script>
+    document.getElementById('forgotForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const button = document.getElementById('submitBtn');
+        const messageBox = document.getElementById('messageBox');
+        button.disabled = true;
+        button.textContent = 'Sending...';
+        const response = await fetch('../api/account.php?action=request_password_reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await response.json();
+        button.disabled = false;
+        button.textContent = 'Send reset link';
+        messageBox.classList.add('show');
+        messageBox.querySelector('span').textContent = data.devToken
+            ? `Local reset token: ${data.devToken}. Continue to reset password.`
+            : data.message;
+        if (data.devToken) {
+            sessionStorage.setItem('resetEmail', email);
+            sessionStorage.setItem('resetToken', data.devToken);
+            setTimeout(() => window.location.href = 'reset-password.html', 1400);
+        }
+    });
+    </script>
+</body>
+</html>
