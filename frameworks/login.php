@@ -7,6 +7,15 @@ ini_set('display_errors', 0);
 session_start();
 include '../backend/conn.php';
 
+function isLocalDevelopment(): bool
+{
+    $serverName = $_SERVER['SERVER_NAME'] ?? '';
+    $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+
+    return in_array($serverName, ['localhost', '127.0.0.1'], true)
+        || in_array($remoteAddr, ['127.0.0.1', '::1'], true);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../auth/login.html');
     exit;
@@ -157,9 +166,19 @@ try {
     ]);
 } catch (Exception $e) {
     error_log('Login Mail Error: ' . $e->getMessage());
+
+    if (isLocalDevelopment() && isset($_SESSION['otp'])) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'OTP generated for local testing. Email is not configured.',
+            'devOtp' => $_SESSION['otp']
+        ]);
+        exit;
+    }
+
     echo json_encode([
         'success' => false,
-        'message' => 'Failed to send OTP. Please try again.'
+        'message' => 'Failed to send OTP. Please check SMTP settings.'
     ]);
 }
 ?>

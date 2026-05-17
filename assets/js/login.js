@@ -102,6 +102,13 @@ try {
     if (result.success) {
         successMessage.classList.add('show');
         loginBtn.classList.remove('btn-loading');
+        successMessage.querySelector('span').textContent = result.message || 'Login successful! Redirecting to OTP verification...';
+
+        if (result.devOtp) {
+            sessionStorage.setItem('devOtp', result.devOtp);
+        } else {
+            sessionStorage.removeItem('devOtp');
+        }
 
         setTimeout(() => {
             window.location.href = '../auth/otp.html';

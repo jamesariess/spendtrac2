@@ -3,6 +3,15 @@ header('Content-Type: application/json');
 session_start();
 include '../backend/conn.php';
 
+function isLocalDevelopment(): bool
+{
+    $serverName = $_SERVER['SERVER_NAME'] ?? '';
+    $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+
+    return in_array($serverName, ['localhost', '127.0.0.1'], true)
+        || in_array($remoteAddr, ['127.0.0.1', '::1'], true);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if OTP session exists
     if (!isset($_SESSION['otp_email'])) {
@@ -51,9 +60,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
     } catch (Exception $e) {
+        error_log('Resend OTP Mail Error: ' . $e->getMessage());
+
+        if (isLocalDevelopment()) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'OTP regenerated for local testing. Email is not configured.',
+                'devOtp' => (string) $otp
+            ]);
+            exit;
+        }
+
         echo json_encode([
             'success' => false,
-            'message' => 'Failed to resend OTP'
+            'message' => 'Failed to resend OTP. Please check SMTP settings.'
         ]);
     }
 } else {

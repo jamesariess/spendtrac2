@@ -47,6 +47,7 @@
     const isSignupMode = urlParams.get('mode') === 'signup';
     const otpSubtitle = document.getElementById('otpSubtitle');
     const backLink = document.getElementById('backLink');
+    const devOtp = sessionStorage.getItem('devOtp');
 
     // Update subtitle and back link based on mode
     if (isSignupMode) {
@@ -55,6 +56,10 @@
         backLink.textContent = '← Go back to signup';
     } else {
         backLink.href = 'login.html';
+    }
+
+    if (devOtp) {
+        otpSubtitle.textContent = `Local testing OTP: ${devOtp}`;
     }
 
     const inputs = document.querySelectorAll('.otp-input');
@@ -137,7 +142,14 @@
             const data = await res.json();
 
             if (data.success) {
-                document.getElementById('error-msg').textContent = 'OTP resent to your email!';
+                if (data.devOtp) {
+                    sessionStorage.setItem('devOtp', data.devOtp);
+                    otpSubtitle.textContent = `Local testing OTP: ${data.devOtp}`;
+                    document.getElementById('error-msg').textContent = 'OTP regenerated for local testing.';
+                } else {
+                    sessionStorage.removeItem('devOtp');
+                    document.getElementById('error-msg').textContent = 'OTP resent to your email!';
+                }
                 document.getElementById('error-msg').style.color = '#10b981';
                 startTimer();
             } else {
@@ -173,6 +185,8 @@
         const data = await res.json();
 
         if (data.success) {
+            sessionStorage.removeItem('devOtp');
+
             // For signup mode, we need to complete the signup first
             if (isSignupMode) {
                 // Call complete_signup endpoint
