@@ -30,7 +30,8 @@ function get_overview(PDO $pdo, int $userId): array
 {
     $stmt = $pdo->prepare(
         'SELECT transaction_id, type, description, amount, currency, category, payment_method, notes,
-                receipt_path, is_recurring, recurring_interval, transaction_date
+                receipt_path, is_recurring, recurring_interval, due_date, payment_status,
+                reminder_enabled, reminder_days_before, reminder_last_sent_at, transaction_date
          FROM transactions
          WHERE user_id = :user_id
          ORDER BY transaction_date DESC, transaction_id DESC
@@ -146,6 +147,12 @@ try {
         $notes = clean_string($input['notes'] ?? '', 1000);
         $isRecurring = !empty($input['is_recurring']) ? 1 : 0;
         $recurringInterval = $isRecurring ? ($input['recurring_interval'] ?? 'monthly') : null;
+        $dueDate = !empty($input['due_date']) ? valid_date($input['due_date']) : null;
+        $paymentStatus = in_array(($input['payment_status'] ?? 'unpaid'), ['unpaid', 'paid', 'scheduled'], true)
+            ? $input['payment_status']
+            : 'unpaid';
+        $reminderEnabled = !empty($input['reminder_enabled']) ? 1 : 0;
+        $reminderDaysBefore = max(0, min(30, (int) ($input['reminder_days_before'] ?? 3)));
 
         if (!in_array($type, ['income', 'expense'], true)) {
             json_response(['success' => false, 'message' => 'Invalid transaction type'], 422);
@@ -168,6 +175,10 @@ try {
             ':notes' => $notes ?: null,
             ':is_recurring' => $isRecurring,
             ':recurring_interval' => $recurringInterval,
+            ':due_date' => $dueDate,
+            ':payment_status' => $paymentStatus,
+            ':reminder_enabled' => $reminderEnabled,
+            ':reminder_days_before' => $reminderDaysBefore,
             ':transaction_date' => $date,
         ];
 
@@ -178,6 +189,8 @@ try {
                  SET type = :type, description = :description, amount = :amount, currency = :currency,
                      category = :category, payment_method = :payment_method, notes = :notes,
                      is_recurring = :is_recurring, recurring_interval = :recurring_interval,
+                     due_date = :due_date, payment_status = :payment_status,
+                     reminder_enabled = :reminder_enabled, reminder_days_before = :reminder_days_before,
                      transaction_date = :transaction_date
                  WHERE transaction_id = :transaction_id AND user_id = :user_id'
             );
@@ -187,9 +200,9 @@ try {
 
         $stmt = $pdo->prepare(
             'INSERT INTO transactions
-                (user_id, type, description, amount, currency, category, payment_method, notes, is_recurring, recurring_interval, transaction_date)
+                (user_id, type, description, amount, currency, category, payment_method, notes, is_recurring, recurring_interval, due_date, payment_status, reminder_enabled, reminder_days_before, transaction_date)
              VALUES
-                (:user_id, :type, :description, :amount, :currency, :category, :payment_method, :notes, :is_recurring, :recurring_interval, :transaction_date)'
+                (:user_id, :type, :description, :amount, :currency, :category, :payment_method, :notes, :is_recurring, :recurring_interval, :due_date, :payment_status, :reminder_enabled, :reminder_days_before, :transaction_date)'
         );
         $stmt->execute($params);
         json_response(['success' => true, 'message' => 'Transaction saved', 'transaction_id' => (int) $pdo->lastInsertId()]);
@@ -260,4 +273,3 @@ try {
     error_log('Finance API Error: ' . $e->getMessage());
     json_response(['success' => false, 'message' => 'Database error. Run database.sql or the migration file, then try again.'], 500);
 }
-
