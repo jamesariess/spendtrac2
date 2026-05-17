@@ -8,7 +8,7 @@ ob_start();
         <div class="section-head"><div><h2>New Expense</h2><p>Scan a bill, review details, then save the expense with reminders.</p></div></div>
         <div class="field full" style="margin-bottom:14px">
             <label>Scan Bill / Receipt Image</label>
-            <input type="file" id="billImage" accept="image/*,application/pdf">
+            <input type="file" id="billImage" accept="image/*">
             <p class="metric-note">OCR runs in your browser. Details will pop up first so you can edit before saving.</p>
         </div>
         <form id="expenseForm" class="form-grid">

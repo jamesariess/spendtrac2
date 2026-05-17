@@ -10,6 +10,8 @@ PHP/XAMPP expense tracking system with MySQL-backed authentication and transacti
 - Secure session helpers, CSRF helpers, remember-me bootstrap, and JSON responses in `backend/security.php`
 - Dashboard, expenses, income, analytics, reports, budget planner, transactions, notifications, settings, profile, goals, and admin pages
 - MySQL-backed transactions, budgets, savings goals, notifications, subscriptions, and payment event storage
+- Expense due dates, payment status, email reminders, and cron-ready reminder sender
+- Browser-side bill/receipt OCR scanning with an editable review popup before saving to MySQL
 - Admin-only system overview for users, transaction volume, expenses, and subscription counts
 - Stripe/PayPal billing entry points with environment-based configuration checks
 - Password reset and email verification API endpoints
@@ -46,6 +48,16 @@ On localhost, if SMTP is not configured, the OTP is displayed on the OTP screen 
 - `api/webhooks.php` stores Stripe/PayPal webhook events.
 - `api/transactions.php` remains for backward compatibility.
 - `api/logout.php` destroys the authenticated session.
+- `cron/send_expense_reminders.php` sends due expense reminders and creates in-app notifications.
+
+## Expense reminders and bill scanning
+
+- In `pages/expenses.php`, upload a bill image. The browser uses Tesseract OCR to extract merchant text, amount, date, due date, and currency when possible.
+- The extracted details always appear in a review popup first. Users can edit the details before saving.
+- Expenses with a due date and email reminder enabled are picked up by `cron/send_expense_reminders.php`.
+- On Windows/XAMPP, run the reminder script from Task Scheduler daily:
+  `C:\xampp\php\php.exe C:\xampp\htdocs\spendtrac2\cron\send_expense_reminders.php`
+  Make sure `SPENDTRACK_SMTP_USER` and `SPENDTRACK_SMTP_PASS` are configured for actual email delivery.
 
 ## Deployment notes
 
