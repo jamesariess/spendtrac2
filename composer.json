@@ -5,7 +5,8 @@
     "require": {
         "jstolpe/instagram-graph-api-php-sdk": "^1.0",
         "phpro/grumphp": "^2.20",
-        "phpmailer/phpmailer": "^7.0"
+        "phpmailer/phpmailer": "^7.0",
+        "stripe/stripe-php": "^16.0"
     },
     "config": {
         "allow-plugins": {
