@@ -561,7 +561,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="dashboard.html" class="sidebar-logo">
+                <a href="dashboard.php" class="sidebar-logo">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                     </svg>
@@ -572,7 +572,7 @@
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
-                    <a href="dashboard.html" class="nav-item" data-page="dashboard">
+                    <a href="dashboard.php" class="nav-item" data-page="dashboard">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="7" height="7"/>
                             <rect x="14" y="3" width="7" height="7"/>
@@ -831,11 +831,9 @@
     <!-- Toast Notification -->
     <div class="toast" id="toast"></div>
 
+    <script src="../assets/js/app-auth.js"></script>
     <script>
-        // Check if user is logged in
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'login.html';
-        }
+        requirePageSession();
 
         // Mobile menu toggle
         function toggleSidebar() {
@@ -905,11 +903,7 @@
 
         // Logout function
         function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userEmail');
-                window.location.href = 'login.html';
-            }
+            logoutSession();
         }
     </script>
 </body>

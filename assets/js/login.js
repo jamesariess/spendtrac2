@@ -102,9 +102,6 @@ try {
     if (result.success) {
         successMessage.classList.add('show');
         loginBtn.classList.remove('btn-loading');
-        
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userEmail', email);
 
         setTimeout(() => {
             window.location.href = '../auth/otp.html';
@@ -125,11 +122,6 @@ try {
     console.error('Login error:', error);
 }
 });
-
-// Check session on load (optional, for frontend-only)
-if (localStorage.getItem('isLoggedIn') === 'true') {
-    window.location.href = '../pages/dashboard.html';
-}
 
 // Check if signup was successful
 const urlParams = new URLSearchParams(window.location.search);

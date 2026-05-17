@@ -1,9 +1,8 @@
-Restart MCP Server-- Demo user for spendtrackfinance DB (run in phpMyAdmin or MySQL CLI)
--- Ensure 'users' table exists with columns: id (auto), email, password
+-- Demo user for spendtrackfinance DB (run database.sql first in phpMyAdmin or MySQL CLI)
+-- Password: demo123
 
-INSERT INTO users (email, password) VALUES 
-('demo@spendtrack.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'); -- password_hash('demo123', PASSWORD_DEFAULT)
+INSERT INTO user (email, password) VALUES
+('demo@spendtrack.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
 
 -- Verify:
--- SELECT id, email FROM users WHERE email = 'demo@spendtrack.com';
-
+-- SELECT user_id, email FROM user WHERE email = 'demo@spendtrack.com';

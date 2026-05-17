@@ -36,7 +36,7 @@ try {
     if ($user && password_verify($password, $user['password'])) {
         
         // Generate OTP
-        $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         // Store in session
         $_SESSION['otp']          = $otp;
@@ -54,12 +54,19 @@ try {
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'slatetransportsystem@gmail.com';
-        $mail->Password   = 'mfkkigrgxtoascov';
+        $smtpUser = getenv('SPENDTRACK_SMTP_USER') ?: '';
+        $smtpPass = getenv('SPENDTRACK_SMTP_PASS') ?: '';
+
+        if ($smtpUser === '' || $smtpPass === '') {
+            throw new Exception('SMTP credentials are not configured');
+        }
+
+        $mail->Username   = $smtpUser;
+        $mail->Password   = $smtpPass;
         $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
-      $mail->setFrom('slatetransportsystem@gmail.com', 'SpendTrack');
+      $mail->setFrom($smtpUser, 'SpendTrack');
         $mail->addAddress($email);
         $mail->Subject = 'Your SpendTrack Login Code';
 

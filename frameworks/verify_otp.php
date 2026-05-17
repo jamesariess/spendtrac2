@@ -31,11 +31,16 @@ if(time() > $_SESSION['otp_expiry']){
 
 if($enteredOtp == $_SESSION['otp']){
     // OTP verified - set authenticated session
+    session_regenerate_id(true);
     $_SESSION['authenticated'] = true;
     $_SESSION['otp_verified'] = true;
+    $_SESSION['user_id'] = $_SESSION['otp_user_id'] ?? null;
+    $_SESSION['user_email'] = $_SESSION['otp_email'] ?? null;
 
     // Clean up OTP data
     unset($_SESSION['otp']);
+    unset($_SESSION['otp_user_id']);
+    unset($_SESSION['otp_email']);
     unset($_SESSION['otp_expiry']);
     unset($_SESSION['otp_attempts']);
 

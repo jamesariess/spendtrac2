@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $email = $_SESSION['otp_email'];
-    $otp = rand(100000, 999999);
+    $otp = random_int(100000, 999999);
 
     // Update session with new OTP
     $_SESSION['otp'] = $otp;
@@ -25,12 +25,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'your_email@gmail.com';
-        $mail->Password = 'your_app_password';
+        $smtpUser = getenv('SPENDTRACK_SMTP_USER') ?: '';
+        $smtpPass = getenv('SPENDTRACK_SMTP_PASS') ?: '';
+
+        if ($smtpUser === '' || $smtpPass === '') {
+            throw new Exception('SMTP credentials are not configured');
+        }
+
+        $mail->Username = $smtpUser;
+        $mail->Password = $smtpPass;
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
 
-        $mail->setFrom('your_email@gmail.com', 'SpendTrack');
+        $mail->setFrom($smtpUser, 'SpendTrack');
         $mail->addAddress($email);
 
         $mail->Subject = 'Your OTP Code';

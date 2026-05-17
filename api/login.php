@@ -22,12 +22,13 @@ if (strlen($password) < 6) {
 }
 
 // ✅ Query
-$stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email");
+$stmt = $pdo->prepare("SELECT * FROM user WHERE email = :email");
 $stmt->execute(['email' => $email]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($user && password_verify($password, $user['password'])) {
-    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['user_id'] = $user['user_id'];
+    $_SESSION['authenticated'] = true;
 
     echo json_encode([
         'success' => true,

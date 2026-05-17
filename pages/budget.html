@@ -479,7 +479,7 @@
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
-                    <a href="dashboard.html" class="nav-item">
+                    <a href="dashboard.php" class="nav-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                             <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
@@ -630,10 +630,9 @@
 
     <div class="toast" id="toast"></div>
 
+    <script src="../assets/js/app-auth.js"></script>
     <script>
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'login.html';
-        }
+        requirePageSession();
 
         let currentDate = new Date();
         let budgets = JSON.parse(localStorage.getItem('budgets')) || {};
@@ -817,10 +816,7 @@
         }
 
         function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('isLoggedIn');
-                window.location.href = 'login.html';
-            }
+            logoutSession();
         }
 
         document.getElementById('budgetModal').addEventListener('click', (e) => {

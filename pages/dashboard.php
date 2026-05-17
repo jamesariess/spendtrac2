@@ -1,3 +1,11 @@
+<?php
+session_start();
+
+if (empty($_SESSION['authenticated']) || empty($_SESSION['user_id'])) {
+    header('Location: ../auth/login.html');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,7 +22,6 @@
 </head>
 <body>
    <?php include 'sidebar.html'; ?>
-
         <!-- Main Content -->
         <main class="main-content">
             <!-- Top Header -->
@@ -242,14 +249,11 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // Check if user is logged in
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'login.html';
-        }
-
         // Initialize data
-        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let transactions = [];
         let barChart, doughnutChart;
+        let csrfToken = '';
+        const apiBase = '../api';
 
         // Set default date to today
         document.getElementById('transactionDate').valueAsDate = new Date();
@@ -272,6 +276,74 @@
             entertainment: 'Entertainment',
             income: 'Income'
         };
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        async function apiRequest(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: 'same-origin',
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(options.headers || {})
+                }
+            });
+
+            const data = await response.json().catch(() => ({
+                success: false,
+                message: 'Server returned an invalid response'
+            }));
+
+            if (response.status === 401) {
+                window.location.href = '../auth/login.html';
+                return data;
+            }
+
+            return data;
+        }
+
+        async function loadSession() {
+            const data = await apiRequest(`${apiBase}/session.php`);
+            if (!data.authenticated) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+
+            csrfToken = data.csrfToken;
+
+            if (data.user) {
+                const email = data.user.email || '';
+                document.querySelector('.user-email').textContent = email;
+                document.querySelector('.user-name').textContent = email.split('@')[0] || 'User';
+                document.querySelector('.user-avatar').textContent = (email.substring(0, 2) || 'US').toUpperCase();
+            }
+        }
+
+        async function loadTransactions() {
+            const data = await apiRequest(`${apiBase}/transactions.php`);
+
+            if (!data.success) {
+                showToast(data.message || 'Failed to load transactions', 'error');
+                return;
+            }
+
+            transactions = data.transactions.map(transaction => ({
+                ...transaction,
+                id: String(transaction.id),
+                amount: parseFloat(transaction.amount)
+            }));
+
+            updateStats();
+            renderTransactions();
+            updateCharts();
+        }
 
         // Mobile menu toggle
         function toggleSidebar() {
@@ -352,13 +424,13 @@
                                 ${categoryIcons[t.category] || categoryIcons.food}
                             </div>
                             <div class="transaction-details">
-                                <h4>${t.description}</h4>
+                                <h4>${escapeHtml(t.description)}</h4>
                                 <span>${t.category === 'income' ? 'Income' : 'Expense'}</span>
                             </div>
                         </div>
                     </td>
                     <td>${formatDate(t.date)}</td>
-                    <td>${categoryLabels[t.category] || t.category}</td>
+                    <td>${categoryLabels[t.category] || escapeHtml(t.category)}</td>
                     <td class="transaction-amount ${t.type}">${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}</td>
                     <td>
                         <div class="transaction-actions">
@@ -406,48 +478,41 @@
         }
 
         // Save transaction
-        function saveTransaction() {
+        async function saveTransaction() {
             const id = document.getElementById('transactionId').value;
             const type = document.getElementById('transactionType').value;
-            const description = document.getElementById('transactionDesc').value;
-            const amount = document.getElementById('transactionAmount').value;
+            const description = document.getElementById('transactionDesc').value.trim();
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
             const category = document.getElementById('transactionCategory').value;
             const date = document.getElementById('transactionDate').value;
 
-            if (!description || !amount) {
+            if (!description || !amount || amount <= 0 || !date) {
                 showToast('Please fill in all required fields', 'error');
                 return;
             }
 
-            if (id) {
-                // Update existing
-                const index = transactions.findIndex(t => t.id === id);
-                if (index !== -1) {
-                    transactions[index] = { id, type, description, amount: parseFloat(amount), category, date };
-                    showToast('Transaction updated successfully!', 'success');
-                }
-            } else {
-                // Add new
-                const newTransaction = {
-                    id: Date.now().toString(),
+            const result = await apiRequest(`${apiBase}/transactions.php`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'save',
+                    csrfToken,
+                    id,
                     type,
                     description,
-                    amount: parseFloat(amount),
+                    amount,
                     category,
                     date
-                };
-                transactions.push(newTransaction);
-                showToast('Transaction added successfully!', 'success');
+                })
+            });
+
+            if (!result.success) {
+                showToast(result.message || 'Failed to save transaction', 'error');
+                return;
             }
 
-            // Save to localStorage
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-
-            // Update UI
-            updateStats();
-            renderTransactions();
-            updateCharts();
+            showToast(result.message || 'Transaction saved successfully', 'success');
             closeModal();
+            await loadTransactions();
         }
 
         // Edit transaction
@@ -467,16 +532,25 @@
         }
 
         // Delete transaction
-        function deleteTransaction(id) {
+        async function deleteTransaction(id) {
             if (!confirm('Are you sure you want to delete this transaction?')) return;
 
-            transactions = transactions.filter(t => t.id !== id);
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-            
-            updateStats();
-            renderTransactions();
-            updateCharts();
-            showToast('Transaction deleted successfully!', 'success');
+            const result = await apiRequest(`${apiBase}/transactions.php`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'delete',
+                    csrfToken,
+                    id
+                })
+            });
+
+            if (!result.success) {
+                showToast(result.message || 'Failed to delete transaction', 'error');
+                return;
+            }
+
+            showToast(result.message || 'Transaction deleted successfully', 'success');
+            await loadTransactions();
         }
 
         // Show toast
@@ -619,11 +693,10 @@
         }
 
         // Logout function
-        function logout() {
+        async function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userEmail');
-                window.location.href = 'login.html';
+                await apiRequest(`${apiBase}/logout.php`, { method: 'POST', body: JSON.stringify({ csrfToken }) });
+                window.location.href = '../auth/login.html';
             }
         }
 
@@ -648,9 +721,10 @@
         });
 
         // Initialize
-        updateStats();
-        renderTransactions();
-        updateCharts();
+        (async function initDashboard() {
+            await loadSession();
+            await loadTransactions();
+        })();
     </script>
 </body>
 </html>
