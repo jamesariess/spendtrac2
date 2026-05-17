@@ -88,6 +88,7 @@ class ComposerStaticInitb3e4a427f5c94e0f9a18aba5efe988a4
             'Symfony\\Component\\Config\\' => 25,
             'Symfony\\Component\\Clock\\' => 24,
             'Symfony\\Component\\Cache\\' => 24,
+            'Stripe\\' => 7,
             'Seld\\JsonLint\\' => 14,
         ),
         'R' => 
@@ -309,6 +310,10 @@ class ComposerStaticInitb3e4a427f5c94e0f9a18aba5efe988a4
         'Symfony\\Component\\Cache\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/cache',
+        ),
+        'Stripe\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/stripe/stripe-php/lib',
         ),
         'Seld\\JsonLint\\' => 
         array (
